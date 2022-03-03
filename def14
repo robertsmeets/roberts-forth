@@ -10,9 +10,9 @@ ROM
 : +LOOP COMPILE (+LOOP) 4C C, , ; IMMEDIATE
 : IF COMPILE OBRANCH 4C C, HERE 0 , ; IMMEDIATE
 : THEN HERE SWAP ! ; IMMEDIATE
-: ELSE 4C C, O , HERE SWAP ! HERE 2- ; IMMED
+: ELSE 4C C, O , HERE SWAP ! HERE 2- ; IMMEDIATE
 : WHILE [COMPILE] IF ; IMMEDIATE
-: REPEAT 4C C, SWAP , [COMPILE] THEN ; IMMED
+: REPEAT 4C C, SWAP , [COMPILE] THEN ; IMMEDIATE
 : 2DROP DROP DROP ;
 : ERRDEF CR CR TYPE CR *EXEC \ ;
 : BR> FIND ERVEK ! ;
@@ -77,11 +77,11 @@ HEX
 R> NOT R> DROP IF ." >NAME : Geen naam gevonden" CR ABORT THEN ;
 : >BODY 3 + ;
 : ['] COMPILE ' ; IMMEDIATE
-: NIETS ; O , ( --- ; doe niets ; 0, is nodig om evt. te herdefinieren )
+: NIETS ; 0 , ( --- ; doe niets ; 0, is nodig om evt. te herdefinieren )
 : CODE } ( --- ; voegt het volgende woord in invoersliert )
  | ( met lege inhoud toe aan woordenschat )
 : [COMPILE] [ ;
-: VEKTO R ( --- ; maakt een vektor met naam uit invoersliert )
+: VEKTOR ( --- ; maakt een vektor met naam uit invoersliert )
  ; ( die wijst naar NIETS )
 CODE.4C C, [ FIND NIETS ] LITERAL , ;
 : MAAK ( --- ; herdefinieer woord uit invoersliert als )
