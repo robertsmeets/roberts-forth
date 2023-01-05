@@ -61,7 +61,7 @@ serven:			php
 			txa
 			pha
 			tsx
-			lda&103,X
+			lda $103,x
 			cmp#4
  			beq unreco
 			cmp#9
@@ -73,9 +73,9 @@ unniet:			pla
 			pla
 			plp
 			rts
-unreco			ldx#0
-unrl			lda(&F2),Y
-			cmp#ASC"." 
+unreco:			ldx #0
+unrl:			lda ($F2),y
+			cmp#'.'
 			beq unpunt
 			cmp uncom,X
 			bne unniet
@@ -84,13 +84,13 @@ unrl			lda(&F2),Y
 			cpx#5
 			bne unrlp
 unwel:			lda#142
-			ldx&F4
+			ldx$F4
 			jmp osbyte
 unpunt:			cpx#2
 			bpl unwel
 			bmi unniet
-//.uncom EQUS"FORTH"
-shelp:			lda(&F2),Y
+uncom: EQUS"FORTH"
+shelp:			lda ($F2),y
 			cmp#32
 			bne shna
 			iny
@@ -154,10 +154,10 @@ rat: tsx
 			clc
 			adc#4
 			tax
-			lda&100,X
+			lda$100,X
 			sta ad+1
 			dex
-			lda&100,X
+			lda$100,X
 			sta ad
 			jmp put
 rrat: tsx
@@ -165,10 +165,10 @@ rrat: tsx
 			clc
 			adc#6
 			tax
-			lda&100,X
+			lda$100,X
 			sta ad+1
 			dex
-			lda&100,X
+			lda$100,X
 			sta ad
 			jmp put
 defj: EQUB 1
@@ -180,10 +180,10 @@ j: tsx
 			clc
 			adc#8
 			tax
-			lda&100,X
+			lda$100,X
 			sta ad+1
 			dex
-			lda&100,X
+			lda$100,X
 			sta ad
 			 jmp put
 deffromr: EQUB 2
@@ -299,7 +299,7 @@ sok: lda ad+1
 dos: jsr spc
 			dec ad
 			lda ad
-			 cmp#&FF
+			cmp#$FF
 			bne sok
 			dec ad+1
 			jmp sok
@@ -309,14 +309,14 @@ defat: EQUB 1
 			 EQUB FNH(defpling)
 at: jsr dropit
 atwrm: ldy#0
-			lda(ad),Y
+			lda (ad),Y
 			tax
 			iny
-			lda(ad),Y
+			lda (ad),Y
 			sta ad+1
 			txa
 			sta ad
-			jmp put #4
+			jmp put
 defpling: EQUB 1
 			 EQUS "!"
 			 EQUB FNL(defemit)
@@ -324,10 +324,10 @@ defpling: EQUB 1
 pling: jsr droptw
 			ldy#0
 			lda ad
-			sta(ad+2),Y
+			sta (ad+2),Y
 			lda ad+1
 			iny
-			sta(ad+2),Y
+			sta (ad+2),Y
 			rts
 defemit: EQUB 4
 			 EQUS "EMIT"
@@ -342,7 +342,7 @@ defcat: EQUB 2
 			 EQUB FNH(defcpling)
 cat: jsr dropit
 			ldy#0
-			lda(ad),Y
+			lda (ad),Y
 			sta ad
 			jsr msb0
 			jmp put
@@ -353,7 +353,7 @@ defcpling: EQUB 2
 cpling: jsr droptw
 			lda ad
 			ldy#0
-			sta(ad+2),Y
+			sta (ad+2),Y
 			rts
 defvrgt: EQUB 1
 			 EQUS "?"
@@ -396,7 +396,7 @@ defallot: EQUB 5
 			 EQUB FNL(defquery)
 			 EQUB FNH(defquery)
 allot: jsr dropit
-			.alloti lda here
+alloti: lda here
 			clc
 			adc ad
 			sta here
@@ -423,9 +423,9 @@ tib: lda#FNL (buffer)
 			sta ad+1
 			jmp put
 status: jsr spc
-			lda#ASC"O"
+			lda#'O'
 			jsr oswrch
-			lda#ASC"K"
+			lda#'K'
 			 jmp oswrch
 defmode: EQUB 4
 			 EQUS "MODE"
@@ -446,7 +446,7 @@ words: jsr osnewl
 			sta ad+5
 			lda lwoord+1
 			sta ad+6
-			.wordz lda ad+5
+wordz: lda ad+5
 			bne wook
 			lda ad+6
 			bne wook
@@ -460,8 +460,8 @@ wook: lda#1
 			adc ad+6
 			sta ad+1
 			ldy#0
-			lda(ad+5),Y
-			and #&7F
+			lda (ad+5),Y
+			and #$7F
 			pha
 			sta ad+2
 			sty ad+3
@@ -471,10 +471,10 @@ wook: lda#1
 			pla
 			tay
 			iny
-			lda(ad+5),Y
+			lda (ad+5),Y
 			pha
 			iny
-			lda(ad+5),Y
+			lda (ad+5),Y
 			sta ad+6
 			pla
 			sta ad+5
@@ -483,7 +483,7 @@ vind: lda lwoord
 			sta ad+3
 			lda lwoord+1
 			sta ad+4
-			.vindz lda ad+3
+vindz: lda ad+3
 			bne vook
 			lda ad+4
 			bne vook
@@ -492,36 +492,35 @@ vind: lda lwoord
 			sta ad+1
 			rts
 vook: ldy#0
-			lda(ad+3),Y
-			and#&7F
+			lda (ad+3),Y
+			and #$7F
 			cmp ad+2
 			beq voegel
-			.voet tay
+voet: tay
 			iny
-			lda(ad+3),Y
+			lda (ad+3),Y
 			pha
 			iny
-			lda(ad+3),Y
+			lda (ad+3),Y
 			sta ad+4
 			pla
 			sta ad+3
 			jmp vindz
 voegel: ldy#0
-			.voezz lda(ad),Y
+voezz:			lda (ad),Y
 			iny
-			cmp(ad+3),Y
+			cmp (ad+3),Y
 			bne voeni
 			cpy ad+2
 			bne voezz
 			jmp voewat
-			.voeni
-			ldy#0
-			lda(ad+3),Y
-			and#&7F
+voeni: ldy#0
+			lda (ad+3),Y
+			and#$7F
 			jmp voet
 voewat: ldy#0
-			lda(ad+3),Y
-			and#&7F
+			lda (ad+3),Y
+			and#$7F
 			clc
 			adc ad+3
 			sta ad
@@ -556,8 +555,8 @@ doe: jsr droptw
 			lda ad+1
 			bne doeiet
 			ldy#0
-			lda(ad+6),Y
-			cmp#ASC"*"
+			lda (ad+6),Y
+			cmp#'*'
 			beq command
 			jsr getl
 			lda state
@@ -569,7 +568,7 @@ defliteral: EQUB 7
 			 EQUS "LITERAL"
 			 EQUB FNL(deflit)
 			 EQUB FNH(deflit)
-literal: lda#&20
+literal: 		lda#$20
 			jsr czet
 			lda#FNL(lit)
 			jsr czet
@@ -600,8 +599,8 @@ lit: pla
 			pha
 			jmp atwrm
 getl: ldy#0
-			lda(ad+6),Y
-			cmp#ASC"-"
+			lda (ad+6),Y
+			cmp#'-'
 			bne getal
 			lda#1
 			clc
@@ -618,14 +617,14 @@ getal: ldy#0
 			sty ad+5
 getloop: cpy ad+8
 			beq getend
-			lda(ad+6),Y
-			cmp# ASC"A"
+			lda (ad+6),Y
+			cmp#'A'
 			bpl geta
 			sec
-			sbc#ASC"0"
+			sbc#'0'
 			jmp getvoeg
 geta: sec
-			sbc#(ASC"A"-10)
+			sbc#('A'-10)
 getvoeg: cmp base
 			bcs nigetal
 			pha
@@ -658,20 +657,20 @@ getend: lda ad+4
 			jsr put
 			jmp skips
 doeiets: ldy#0
-			lda(ad+3),Y
-			and#&80
+			lda (ad+3),Y
+			and#$80
 			bne doewe
 			lda state
 			beq doewe
 			ldy#0
-			lda#&20
-			sta(here),Y
+			lda#$20
+			sta (here),Y
 			iny
 			lda ad
-			sta(here),Y
+			sta (here),Y
 			lda ad+1
 			iny
-			sta(here),Y
+			sta (here),Y
 allot3: lda#3
 			clc
 			adc here
@@ -726,7 +725,7 @@ definterpret: EQUB 9
 			 EQUB FNH(defforget)
 interpret: lda#0
 			sta intib
-			.intp jsr skips
+intp: jsr skips
 			ldy intib
 			lda buffer,Y
 			cmp#13
@@ -773,10 +772,10 @@ forgok: lda ad+3
 			sbc#0
 			sta ad+1
 			ldy#0
-			lda(ad),Y
+			lda (ad),Y
 			sta lwoord
 			iny
-			lda(ad),Y
+			lda (ad),Y
 			sta lwoord+1
 			rts
 skips: ldy intib
@@ -797,7 +796,7 @@ normsk: ldy intib
 nkret: rts
 comips: ldy intib
 			lda buffer, Y
-			cmp#ASC"\"
+			cmp#'\'
 			beq comir
 			cmp#13
 			beq comr
@@ -822,9 +821,9 @@ definit: EQUB 4
 			 EQUB FNL(defrom)
 			 EQUB FNH(defrom)
 init: lda#FNL(brkk) 
-			sta&202
+			sta$202
 			lda#FNH (brkk) 
-			sta&203
+			sta$203
 			lda#FNL(type)
 			sta ervek
 			lda#FNH(type)
@@ -860,7 +859,7 @@ ram: lda#131
 toev: lda#126
 			jsr osbyte
 etxt: EQUB 0
-			EQUB&11
+			EQUB$11
 			EQUS"Escape"
 			EQUB 0
 defabort: EQUB 5
@@ -882,23 +881,23 @@ qlp: jsr osnewl
 			bne qlp
 			jsr status
 			jmp qlp
-.serror
+serror:
 			EQUB 0
 			EQUB 0
 			EQUS"Stapel leeg"
 			EQUB 0
-.werror
+werror:
 			EQUB 0
 			EQUB 0
 			EQUS"Woord onbekend"
 			EQUB 0
-.in lda#FNL(intib)
+in: lda#FNL(intib)
 			sta ad
 			lda#FNH(intib)
 			sta ad+1
 			jmp put
-.voegtoe
-			.voegwrm jsr skips
+voegtoe:
+voegwrm: jsr skips
 			lda intib
 			sta ad+2
 			jsr normsk
@@ -909,23 +908,23 @@ qlp: jsr osnewl
 			beq crerror
 			sta ad+3
 			ldy#0
-			sta(here),Y
+			sta (here),Y
 			iny
 			ldx ad+2
-			.vlp lda buffer,X
-			sta(here),Y
+vlp: lda buffer,X
+			sta (here),Y
 			inx
 			iny
 			cmp#32
 			beq voegst
 			cmp#13
 			bne vlp
-			.voegst dey
+voegst: dey
 			lda lwoord
-sta (here), Y
+			sta (here), Y
 			iny
 			lda lwoord+1
-sta(here),Y
+			sta (here),Y
 			lda here
 			sta lwoord
 			lda here+1
@@ -953,11 +952,11 @@ dblpnt: jsr voegtoe
 			lda#1
 			sta state
 			rts
-defpntkomma: EQUB &81
+defpntkomma:		EQUB $81
 			 EQUS ";"
 			 EQUB FNL(defcreate)
 			 EQUB FNH(defcreate)
-pntkomma: lda#&60
+pntkomma:		lda#$60
 			jsr czet
 			lda#0
 			sta state
@@ -967,7 +966,7 @@ defcreate: EQUB 6
 			 EQUB FNL(defconstant)
 			 EQUB FNH(defconstant)
 create: jsr voegtoe
-			lda#&20
+			lda#$20
 			jsr czet
 			lda#FNL(creac) 
 			jsr czet
@@ -986,7 +985,7 @@ defconstant: EQUB 8
 			 EQUB FNL(defstt)
 			 EQUB FNH(defstt)
 constant: jsr voegtoe
-			lda#&20
+			lda#$20
 			jsr czet
 			lda#FNL(constc) 
 			jsr czet
@@ -1290,7 +1289,7 @@ tyloop: lda ad
 			cmp ad+3
 			bne tyhup
 			rts
-.tyhup lda(ad),Y
+tyhup: lda(ad),Y
 			jsr oswrch
 			clc
 			lda#1
@@ -1357,19 +1356,19 @@ exhup: lda#0
 			adc ad+1
 			sta ad+1
 			jmp exloop
-			.exesc jmp toev
-			.exret jsr spc
-.exrut ldy#0
+exesc: jmp toev
+exret: jsr spc
+exrut: ldy#0
 			lda#13
 			sta(ad),Y
 			rts
-.exdel lda ad
+exdel: lda ad
 			cmp ad+4
 			bne exdoedel
 			lda ad+1
 			cmp ad+5
 			beq exloop
-			.exdoedel sec
+exdoedel: sec
 			lda ad
 			sbc#1l
 			sta ad
