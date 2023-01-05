@@ -74,7 +74,7 @@ unniet:			pla
 			plp
 			rts
 unreco:			ldx #0
-unrl:			lda ($F2),y
+unrlp:			lda ($F2),y
 			cmp#'.'
 			beq unpunt
 			cmp uncom,X
@@ -807,13 +807,13 @@ comir: lda#13
 			inc intib
 comr: rts
 langen: cmp#1
-			beq start
+			beq startlab
 			rts
 defstart: EQUB 5
 			 EQUS "START"
 			 EQUB FNL(definit)
 			 EQUB FNH(definit)
-start: cli
+startlab:			cli
 			jsr init
 			jmp abort
 definit: EQUB 4
@@ -1028,8 +1028,8 @@ nulis: jsr dropit
 			bne nnul
 			cmp ad+1
 			bne nnul
-			jmp true
-nnul: jmp false
+			jmp truelab
+nnul: jmp falselab
 defiss: EQUB 1
 			 EQUS "="
 			 EQUB FNL(defnulkl)
@@ -1037,24 +1037,24 @@ defiss: EQUB 1
 iss: jsr droptw
 			lda ad
 			cmp ad+2
-			bne false
+			bne falselab
 			lda ad+1
 			cmp ad+3
-			bne false
-			beq true
+			bne falselab
+			beq truelab
 defnulkl: EQUB 2
 			 EQUS "0<"
 			 EQUB FNL(defnulgr)
 			 EQUB FNH(defnulgr)
 nulkl: jsr dropit
 			lda ad+1
-			bmi true
-			bpl false
+			bmi truelab
+			bpl falselab
 deftrue: EQUB 4
 			 EQUS "TRUE"
 			 EQUB FNL(deffalse)
 			 EQUB FNH(deffalse)
-true: ldy#0
+truelab:		ldy#0
 			sty ad+1
 			iny
 			sty ad
@@ -1063,7 +1063,7 @@ deffalse: EQUB 5
 			 EQUS "FALSE"
 			 EQUB FNL(defiss)
 			 EQUB FNH(defiss)
-false: lda#0
+falselab: lda#0
 			sta ad
 			sta ad+1
 			jmp put
@@ -1073,11 +1073,11 @@ defnulgr: EQUB 2
 			 EQUB FNH(defkl)
 nulgr: jsr dropit
 			lda ad+1
-			bmi false
-			bne true
+			bmi falselab
+			bne truelab
 			lda ad
-			bne true
-			beq false
+			bne truelab
+			beq falselab
 defkl: EQUB 1
 			 EQUS "<"
 			 EQUB FNL(defgr)
@@ -1086,12 +1086,12 @@ kl: jsr droptw
 			lda ad+1
 			cmp ad+3
 			beq klna
-			bpl false
-			bmi true
+			bpl falselab
+			bmi truelab
 klna: lda ad
 			cmp ad+2
-			bcs false
-			bcc true
+			bcs falselab
+			bcc truelab
 defgr: EQUB 1
 			 EQUS ">"
 			 EQUB FNL(defimmediate)
@@ -1100,19 +1100,19 @@ gr: jsr droptw
 			lda ad+1
 			cmp ad+3
 			beq grna
-			bmi false
-			bpl true
+			bmi falselab
+			bpl truelab
 grna: lda ad
 			cmp ad+2
-			beq false
-			bcs true
-			bcc false
+			beq falselab
+			bcs truelab
+			bcc falselab
 ukl: jsr droptw
 			lda ad+1
 			cmp ad+3
 			beq klna
-			bcc true
-			bcs false
+			bcc truelab
+			bcs falselab
 defimmediate: EQUB 9
 			 EQUS "IMMEDIATE"
 			 EQUB FNL(deftype)
@@ -1122,11 +1122,11 @@ immediate: lda lwoord
 			lda lwoord+1
 			sta ad+1
 			ldy#0
-			lda(ad),Y
-			ora#&80
-			sta(ad),Y
+			lda (ad),Y
+			ora#$80
+			sta (ad),Y
 			rts
-stcom: lda#&20
+stcom:			lda#$20
 			jsr czet
 			lda#FNL(stcode) 
 			jsr czet
@@ -1135,16 +1135,16 @@ stcom: lda#&20
 			lda#0
 			sta ad+2
 			ldy#1
-stplp: lda(ad+6),Y
+stplp:			lda (ad+6),Y
 			cmp#13
 			beq stprret
-			sta(here),Y
+			sta (here),Y
 			iny
 			jmp stplp
-stprret: sta(here),Y
+stprret:		sta (here),Y
 			tya
 			ldy#0
-			sta(here),Y
+			sta (here),Y
 			tay
 			iny
 			sty ad
@@ -1152,7 +1152,7 @@ stprret: sta(here),Y
 			jmp allot
 tprint: lda state
 			beq tprdoe
-			lda#&20
+			lda#$20
 			jsr czet
 			lda#FNL(tprintcode)
 			jsr czet
@@ -1165,9 +1165,9 @@ tprint: lda state
 tplp: lda buffer,X
 			cmp#13
 			beq tprret
-			cmp#ASC""""
+			cmp#@"\"".charAt(0)
 			beq tpraan
-			sta(here),Y
+			sta (here),Y
 			inc intib
 			inx
 			iny
@@ -1176,7 +1176,7 @@ tpraan: inc intib
 tprret: dey
 			 tya
 			ldy#0
-			sta(here),Y
+			sta (here),Y
 			tay
 			iny
 			sty ad
@@ -1186,7 +1186,7 @@ tprdoe: ldx intib
 			lda buffer,X
 			cmp#13
 			beq tprdr
-			cmp#ASC""""
+			cmp#@"\"".charAt(0)
 			beq tprdr
 			jsr oswrch
 			inc intib
@@ -1201,7 +1201,7 @@ tprintcode: pla
 			adc#0
 			sta ad+1
 			ldy#0
-			lda(ad),Y
+			lda (ad),Y
 			sta ad+2
 			lda#0
 			sta ad+3
@@ -1239,7 +1239,7 @@ stcode: pla
 			adc#0
 			sta ad+1
 			ldy#0
-			lda(ad),Y
+			lda (ad),Y
 			sta ad+2
 			lda ad
 			clc
@@ -1289,7 +1289,7 @@ tyloop: lda ad
 			cmp ad+3
 			bne tyhup
 			rts
-tyhup: lda(ad),Y
+tyhup:			lda (ad),Y
 			jsr oswrch
 			clc
 			lda#1
@@ -1347,7 +1347,7 @@ exhup: lda#0
 			cmp#128
 			bcs exloop
 			ldy#0
-			sta(ad),Y
+			sta (ad),Y
 			lda#1
 			clc
 			adc ad
@@ -1360,7 +1360,7 @@ exesc: jmp toev
 exret: jsr spc
 exrut: ldy#0
 			lda#13
-			sta(ad),Y
+			sta (ad),Y
 			rts
 exdel: lda ad
 			cmp ad+4
@@ -1368,11 +1368,11 @@ exdel: lda ad
 			lda ad+1
 			cmp ad+5
 			beq exloop
-exdoedel: sec
+exdoedel:		sec
 			lda ad
-			sbc#1l
+			sbc#1
 			sta ad
-			lda ad+1l
+			lda ad+1
 			sbc#0
 			sta ad+1
 			lda#127
@@ -1385,10 +1385,10 @@ defkomma: EQUB 1
 komma: jsr dropit
 komwrm: ldy#0
 			lda ad
-			sta(here),Y
+			sta (here),Y
 			iny
 			lda ad+1
-			sta(here),Y
+			sta (here),Y
 			jmp allot2
 defckomma: EQUB 2
 			 EQUS "C,"
@@ -1397,8 +1397,8 @@ defckomma: EQUB 2
 ckomma: jsr dropit
 ckomwrm: lda ad
 czet: ldy#0
-			sta(here),Y
-allotl: ldx#1l
+			sta (here),Y
+allotl:			ldx#1
 			stx ad
 			jsr msb0
 			jmp alloti
@@ -1417,10 +1417,10 @@ defnegate: EQUB 6
 			 EQUB FNH(defmin)
 negate: jsr dropit
 negwrm: lda ad
-			eor#&FF
+			eor#$FF
 			sta ad
 			lda ad+1
-			eor#&FF
+			eor#$FF
 			sta ad+1
 			jmp eenpluswrm
 defmin: EQUB 3
@@ -1475,7 +1475,7 @@ defupunt: EQUB 2
 			 EQUB FNL(defpunt)
 			 EQUB FNH(defpunt)
 upunt: jsr dropit
-upuntwrm: lda#&FF
+upuntwrm:		lda#$FF
 puntnbit: pha
 			lda#0
 			sta ad+2
@@ -1517,15 +1517,15 @@ defpunt: EQUB 1
 punt: jsr dropit
 			lda ad+1
 			bpl upuntwrm
-			 lda#ASC"-"
+			lda#'-'
 			jsr oswrch
 			lda ad
-			 eor#&FF
+			eor#$FF
 			clc
 			adc#1
 			sta ad
 			lda ad+1
-			eor#&FF
+			eor#$FF
 			adc#0
 			sta ad+1
 			jmp upuntwrm
@@ -1538,16 +1538,16 @@ bazep: sta base
 			lda#0
 			sta base+1
 			rts
-brkk: lda&FD
+brkk:			lda$FD
 			clc
 			adc#1
 			sta ad
-			lda&FE
+			lda$FE
 			adc#0
 			sta ad+1
 			jsr put
 			ldy#0
-brklp: lda(ad),Y
+brklp:			lda (ad),Y
 			beq brkla
 			iny
 			bne brklp
@@ -1575,7 +1575,7 @@ defexit: EQUB 4
 			 EQUS "EXIT"
 			 EQUB 0
 			 EQUB 0
-exit: lda#&60
+exit:			lda#$60
 			jmp czet
 //]
 //NEXT
