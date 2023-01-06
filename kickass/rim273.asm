@@ -3,57 +3,46 @@
 //					Simple IRQ
 //----------------------------------------------------------
 //----------------------------------------------------------
-			* = $4000 "Robert's Forth"		// <- The name will appear in the memory map when assembling
+			* = $8000 "Robert's Forth"		// <- The name will appear in the memory map when assembling
 
-//VS$="2.73"
-//Q%=4
-//QQ%=6
+			.const VS="2.73"
 //DIM ruim% &C00
-//maxlen=80
-//evvec=&220
-//brkv=&202
-//osbyte=&FFF4
-//oscli=&FFF7
-//osword=&FFF1
-//osnewl=&FFE7
-//osrdch=&FFE0
-//oswrch=&FFEE
-//osfile=&FFDD
-//ad=&70
-//			 seed=ad+10
-//here=ad+15
-//lwoord=ad+17
+			.const maxlen=80
+			.const evvec=$220
+			.const brkv=$202
+			.const osbyte=$FFF4
+			.const oscli=$FFF7
+			.const osword=$FFF1
+			.const osnewl=$FFE7
+			.const osrdch=$FFE0
+			.const oswrch=$FFEE
+			.const osfile=$FFDD
+			.const ad=$70
+			.const seed=ad+10
+			.const here=ad+15
+			.const lwoord=ad+17
 //?lwoord=0
-//			 lwoord?1=0
-//depth=ad+19
-//intib=ad+21
-//state=ad+23
-//base=ad+25
-//ervek=ad+27
-//stack=0
-//buffer=&500
-//pad=&400
-//PROCassem
-//C$="*SAVE ROFORTH "+STR$~ruim%+" "+STR$~O%
-//PRINT C$
-//OSCLI(C$)
-//END
-//DEFPROCassem
-//FOR opt%=Q%TO QQ%STEP (QQ%-Q%)
-//P%=&8000
-//			O%=ruim%
+//	 lwoord?1=0
+			.const depth=ad+19
+			.const intib=ad+21
+			.const state=ad+23
+			.const base=ad+25
+			.const ervek=ad+27
+			.const stack=0
+			.const buffer=$500
+			.const pad=$400
 start:			jmp langen
 			jmp serven
-//EQUB &CF \ ROM type 1100 1111
-//EQUB (cop-&8000)
-//EQUB 273 \ Binaire versie
-//.rtxt EQUS "Robert's Forth"
-//EQUB 0
-//EQUS "Versie "+VS$
-//.cop EQUB 0
-//EQUS "(C)"
-// EQUS " 1988 Robert Smeets"
-// EQUB 0
+			.byte $CF // ROM type 1100 1111
+			.byte cop-$8000
+			.byte 273 // Binaire versie
+rtxt:			.text "Robert's Forth"
+			.byte 0
+			.text "Versie "+VS
+cop:			.byte 0
+			.text "(C)"
+			.text " 1988 Robert Smeets"
+			.byte 0
 serven:			php
 			pha
 			tya
@@ -89,7 +78,7 @@ unwel:			lda#142
 unpunt:			cpx#2
 			bpl unwel
 			bmi unniet
-uncom: EQUS"FORTH"
+uncom:			.text "FORTH"
 shelp:			lda ($F2),y
 			cmp#32
 			bne shna
@@ -107,16 +96,16 @@ shel:			lda rtxt,X
 shkla:			jsr osnewl
 			jmp unniet
 //opt FNinitwrd
-//.defspc EQUB 5
-//			 EQUS "SPACE"
-//			 EQUB FNL(defspp)
-//			 EQUB FNH(defspp)
+defspc:			 .byte 5
+			 .text "SPACE"
+			 .byte <defspp
+			 .byte >defspp
 spc:			lda#32
 			jmp oswrch
-defspp:			EQUB 3
-			 EQUS "SP!"
-			 EQUB FNL(defdropit)
-			 EQUB FNH(defdropit)
+defspp:			.byte 3
+			.text "SP!"
+			.byte <defdropit
+			.byte >defdropit
 spp:			lda#0
 			sta depth
 			rts
@@ -131,10 +120,10 @@ xadr:			lda depth
 xxadr:			asl A
 			tax
 			rts
-defdropit:		 EQUB 4
-			 EQUS "DROP"
-			 EQUB FNL(defrat)
-			 EQUB FNH(defrat)
+defdropit:		 .byte 4
+			 .text "DROP"
+			 .byte <defrat
+			 .byte >defrat
 dropit:			lda depth
 			beq serr
 			jsr xxadr
@@ -145,10 +134,10 @@ dropit:			lda depth
 			dec depth
 			rts
 serr: jmp serror
-defrat: EQUB 2
-			 EQUS "R@"
-			 EQUB FNL(defj)
-			 EQUB FNH(defj)
+defrat: .byte 2
+			 .text "R@"
+			 .byte <defj
+			 .byte >defj
 rat: tsx
 			txa
 			clc
@@ -171,10 +160,10 @@ rrat: tsx
 			lda$100,X
 			sta ad
 			jmp put
-defj: EQUB 1
-			 EQUS "J"
-			 EQUB FNL(deffromr)
-			 EQUB FNH(deffromr)
+defj: .byte 1
+			 .text "J"
+			 .byte <deffromr
+			 .byte >deffromr
 j: tsx
 			txa
 			clc
@@ -186,10 +175,10 @@ j: tsx
 			lda$100,X
 			sta ad
 			 jmp put
-deffromr: EQUB 2
-			 EQUS "R>"
-			 EQUB FNL(deftor)
-			 EQUB FNH(deftor)
+deffromr: .byte 2
+			 .text "R>"
+			 .byte <deftor
+			 .byte >deftor
 fromr: pla
 			tay
 			pla
@@ -203,10 +192,10 @@ fromr: pla
 			tya
 			pha
 			jmp put
-deftor: EQUB 2
-			 EQUS ">R"
-			 EQUB FNL(defpick)
-			 EQUB FNH(defpick)
+deftor: .byte 2
+			 .text ">R"
+			 .byte <defpick
+			 .byte >defpick
 tor: jsr dropit
 			pla
 			tay
@@ -221,10 +210,10 @@ tor: jsr dropit
 			tya
 			pha
 			rts
-defpick: EQUB 4
-			 EQUS "PICK"
-			 EQUB FNL(defdup)
-			 EQUB FNH(defdup)
+defpick: .byte 4
+			 .text "PICK"
+			 .byte <defdup
+			 .byte >defdup
 pick: jsr dropit
 pickwrm: jsr xadr
 			txa
@@ -238,29 +227,29 @@ pickwrm: jsr xadr
 			lda stack-1,X
 			sta ad+1
 			jmp put
-defdup: EQUB 3
-			 EQUS "DUP"
-			 EQUB FNL(defover)
-			 EQUB FNH(defover)
+defdup: .byte 3
+			 .text "DUP"
+			 .byte <defover
+			 .byte >defover
 dup: jsr dropit
 			jsr put
 			jmp put
 msb0: lda#0
 			sta ad+1
 			rts
-defover: EQUB 4
-			 EQUS "OVER"
-			 EQUB FNL(defswap)
-			 EQUB FNH(defswap)
+defover: .byte 4
+			 .text "OVER"
+			 .byte <defswap
+			 .byte >defswap
 over: ldy#0
 			sty ad+1
 			iny
 			sty ad
 			jmp pickwrm
-defswap: EQUB 4
-			 EQUS "SWAP"
-			 EQUB FNL(defdept)
-			 EQUB FNH(defdept)
+defswap: .byte 4
+			 .text "SWAP"
+			 .byte <defdept
+			 .byte >defdept
 swap: jsr droptw
 			lda ad
 			pha
@@ -276,18 +265,18 @@ swap: jsr droptw
 			pla
 			sta ad
 			jmp put
-defdept: EQUB 5
-			 EQUS "DEPTH"
-			 EQUB FNL(defspaces)
-			 EQUB FNH(defspaces)
+defdept: .byte 5
+			 .text "DEPTH"
+			 .byte <defspaces
+			 .byte >defspaces
 dept: jsr msb0
 			lda depth
 			sta ad
 			jmp put
-defspaces: EQUB 6
-			 EQUS "SPACES"
-			 EQUB FNL(defat)
-			 EQUB FNH(defat)
+defspaces: .byte 6
+			 .text "SPACES"
+			 .byte <defat
+			 .byte >defat
 spaces: jsr dropit
 sok: lda ad+1
 			cmp#0
@@ -303,10 +292,10 @@ dos: jsr spc
 			bne sok
 			dec ad+1
 			jmp sok
-defat: EQUB 1
-			 EQUS "@"
-			 EQUB FNL(defpling)
-			 EQUB FNH(defpling)
+defat: .byte 1
+			 .text "@"
+			 .byte <defpling
+			 .byte >defpling
 at: jsr dropit
 atwrm: ldy#0
 			lda (ad),Y
@@ -317,10 +306,10 @@ atwrm: ldy#0
 			txa
 			sta ad
 			jmp put
-defpling: EQUB 1
-			 EQUS "!"
-			 EQUB FNL(defemit)
-			 EQUB FNH(defemit)
+defpling: .byte 1
+			 .text "!"
+			 .byte <defemit
+			 .byte >defemit
 pling: jsr droptw
 			ldy#0
 			lda ad
@@ -329,50 +318,50 @@ pling: jsr droptw
 			iny
 			sta (ad+2),Y
 			rts
-defemit: EQUB 4
-			 EQUS "EMIT"
-			 EQUB FNL(defcat)
-			 EQUB FNH(defcat)
+defemit: .byte 4
+			 .text "EMIT"
+			 .byte <defcat
+			 .byte >defcat
 emit: jsr dropit
 			lda ad
 			jmp oswrch
-defcat: EQUB 2
-			 EQUS "C@"
-			 EQUB FNL(defcpling)
-			 EQUB FNH(defcpling)
+defcat: .byte 2
+			 .text "C@"
+			 .byte <defcpling
+			 .byte >defcpling
 cat: jsr dropit
 			ldy#0
 			lda (ad),Y
 			sta ad
 			jsr msb0
 			jmp put
-defcpling: EQUB 2
-			 EQUS "C!"
-			 EQUB FNL(defvrgt)
-			 EQUB FNH(defvrgt)
+defcpling: .byte 2
+			 .text "C!"
+			 .byte <defvrgt
+			 .byte >defvrgt
 cpling: jsr droptw
 			lda ad
 			ldy#0
 			sta (ad+2),Y
 			rts
-defvrgt: EQUB 1
-			 EQUS "?"
-			 EQUB FNL(defkey)
-			 EQUB FNH(defkey)
+defvrgt: .byte 1
+			 .text "?"
+			 .byte <defkey
+			 .byte >defkey
 vrgt: jsr at
 			jmp punt
-defkey: EQUB 3
-			 EQUS "KEY"
-			 EQUB FNL(defplus)
-			 EQUB FNH(defplus)
+defkey: .byte 3
+			 .text "KEY"
+			 .byte <defplus
+			 .byte >defplus
 key: jsr osrdch
 			sta ad
 			jsr msb0
 			jmp put
-defplus: EQUB 1
-			 EQUS "+"
-			 EQUB FNL(defher)
-			 EQUB FNH(defher)
+defplus: .byte 1
+			 .text "+"
+			 .byte <defher
+			 .byte >defher
 plus: jsr droptw
 			lda ad
 			clc
@@ -382,19 +371,19 @@ plus: jsr droptw
 			adc ad+3
 			sta ad+1
 			jmp put
-defher: EQUB 4
-			 EQUS "HERE"
-			 EQUB FNL(defallot)
-			 EQUB FNH(defallot)
+defher: .byte 4
+			 .text "HERE"
+			 .byte <defallot
+			 .byte >defallot
 her: lda here
 			sta ad
 			lda here+1
 			sta ad+1
 			jmp put
-defallot: EQUB 5
-			 EQUS "ALLOT"
-			 EQUB FNL(defquery)
-			 EQUB FNH(defquery)
+defallot: .byte 5
+			 .text "ALLOT"
+			 .byte <defquery
+			 .byte >defquery
 allot: jsr dropit
 alloti: lda here
 			clc
@@ -404,22 +393,22 @@ alloti: lda here
 			adc ad+1
 			sta here+1
 			rts
-defquery: EQUB 5
-			 EQUS "QUERY"
-			 EQUB FNL(defmode)
-			 EQUB FNH(defmode)
+defquery: .byte 5
+			 .text "QUERY"
+			 .byte <defmode
+			 .byte >defmode
 query: lda#maxlen
 			sta ad+2
 			lda#0
 			sta ad+3
-			lda#FNL(buffer)
+			lda#<buffer
 			sta ad
-			lda#FNH(buffer)
+			lda#>buffer
 			sta ad+1
 			jmp exwrm
 tib: lda#FNL (buffer) 
 			sta ad
-			lda#FNH(buffer)
+			lda#>buffer
 			sta ad+1
 			jmp put
 status: jsr spc
@@ -427,19 +416,19 @@ status: jsr spc
 			jsr oswrch
 			lda#'K'
 			 jmp oswrch
-defmode: EQUB 4
-			 EQUS "MODE"
-			 EQUB FNL(defwords)
-			 EQUB FNH(defwords)
+defmode: .byte 4
+			 .text "MODE"
+			 .byte <defwords
+			 .byte >defwords
 mode: jsr dropit
 			lda#22
 			jsr oswrch
 			lda ad
 			jmp oswrch
-defwords: EQUB 5
-			 EQUS "WORDS"
-			 EQUB FNL(defliteral)
-			 EQUB FNH(defliteral)
+defwords: .byte 5
+			 .text "WORDS"
+			 .byte <defliteral
+			 .byte >defliteral
 words: jsr osnewl
 			jsr osnewl
 			lda lwoord
@@ -564,21 +553,21 @@ doe: jsr droptw
 			rts
 getcom: jmp literal
 doeiet: jmp doeiets
-defliteral: EQUB 7
-			 EQUS "LITERAL"
-			 EQUB FNL(deflit)
-			 EQUB FNH(deflit)
+defliteral: .byte 7
+			 .text "LITERAL"
+			 .byte <deflit
+			 .byte >deflit
 literal: 		lda#$20
 			jsr czet
-			lda#FNL(lit)
+			lda#<lit
 			jsr czet
-			lda#FNH(lit)
+			lda#>lit
 			jsr czet
 			jmp komma
-deflit: EQUB 3
-			 EQUS "LIT"
-			 EQUB FNL(definterpret)
-			 EQUB FNH(definterpret)
+deflit: .byte 3
+			 .text "LIT"
+			 .byte <definterpret
+			 .byte >definterpret
 lit: pla
 			clc
 			adc#1
@@ -612,10 +601,10 @@ getl: ldy#0
 			dec ad+8
 			jsr getal
 			jmp negate
-getal: ldy#0
+getal:			ldy#0
 			sty ad+4
 			sty ad+5
-getloop: cpy ad+8
+getloop:		cpy ad+8
 			beq getend
 			lda (ad+6),Y
 			cmp#'A'
@@ -623,9 +612,9 @@ getloop: cpy ad+8
 			sec
 			sbc#'0'
 			jmp getvoeg
-geta: sec
+geta:			sec
 			sbc#('A'-10)
-getvoeg: cmp base
+getvoeg:		cmp base
 			bcs nigetal
 			pha
 			iny
@@ -687,9 +676,9 @@ allot2: lda#2
 			adc here+1
 			sta here+1
 			rts
-nigetal: jmp werror
-doewe: jmp(ad)
-findit: jsr skips
+nigetal:		jmp werror
+doewe:			jmp(ad)
+findit:			jsr skips
 			ldy intib
 			lda buffer,Y
 			cmp#13
@@ -697,10 +686,10 @@ findit: jsr skips
 			lda intib
 			sta ad+2
 			clc
-			adc#FNL(buffer)
+			adc#<buffer
 			sta ad
 			lda#0
-			adc#FNH(buffer)
+			adc#>buffer
 			sta ad+1
 			jsr put
 			jsr normsk
@@ -719,10 +708,10 @@ findit: jsr skips
 			bne firet
 			jmp werror
 firet: rts
-definterpret: EQUB 9
-			 EQUS "INTERPRET"
-			 EQUB FNL(defforget)
-			 EQUB FNH(defforget)
+definterpret: .byte 9
+			 .text "INTERPRET"
+			 .byte <defforget
+			 .byte >defforget
 interpret: lda#0
 			sta intib
 intp: jsr skips
@@ -733,10 +722,10 @@ intp: jsr skips
 			lda intib
 			sta ad+2
 			clc
-			adc#FNL(buffer)
+			adc#<buffer
 			sta ad
 			lda#0
-			adc#FNH (buffer)
+			adc#>buffer
 			sta ad+1
 			jsr put
 			jsr normsk
@@ -750,10 +739,10 @@ intp: jsr skips
 			jsr doe
 			jmp intp
 inret: rts
-defforget: EQUB 6
-			 EQUS "FORGET"
-			 EQUB FNL(defstart)
-			 EQUB FNH(defstart)
+defforget: .byte 6
+			 .text "FORGET"
+			 .byte <defstart
+			 .byte >defstart
 forget: jsr findit
 			lda ad+3
 			bne forgok
@@ -809,28 +798,28 @@ comr: rts
 langen: cmp#1
 			beq startlab
 			rts
-defstart: EQUB 5
-			 EQUS "START"
-			 EQUB FNL(definit)
-			 EQUB FNH(definit)
+defstart: .byte 5
+			 .text "START"
+			 .byte <definit
+			 .byte >definit
 startlab:			cli
 			jsr init
 			jmp abort
-definit: EQUB 4
-			 EQUS "INIT"
-			 EQUB FNL(defrom)
-			 EQUB FNH(defrom)
-init: lda#FNL(brkk) 
+definit: .byte 4
+			.text "INIT"
+			.byte <defrom
+			.byte >defrom
+init:			lda#<brkk
 			sta$202
-			lda#FNH (brkk) 
+			lda#>brkk
 			sta$203
-			lda#FNL(type)
+			lda#<type
 			sta ervek
-			lda#FNH(type)
+			lda#>type
 			sta ervek+1
-			lda#FNL(defspc)
+			lda#<defspc
 			sta lwoord
-			lda #FNH(defspc)
+			lda #>defspc
 			sta lwoord+1
 			jsr ram
 			lda#0
@@ -838,19 +827,19 @@ init: lda#FNL(brkk)
 			sta state+1
 			sta base+1
 			jmp decimal
-defrom: EQUB 3
-			 EQUS "ROM"
-			 EQUB FNL(defram)
-			 EQUB FNH(defram)
+defrom: .byte 3
+			 .text "ROM"
+			 .byte <defram
+			 .byte >defram
 rom: lda herstor
 			sta here
 			lda herstor+1
 			sta here+1
 			rts
-defram: EQUB 3
-			 EQUS "RAM"
-			 EQUB FNL(defabort)
-			 EQUB FNH(defabort)
+defram: .byte 3
+			 .text "RAM"
+			 .byte <defabort
+			 .byte >defabort
 ram: lda#131
 			jsr osbyte
 			stx here
@@ -858,19 +847,19 @@ ram: lda#131
 			rts
 toev: lda#126
 			jsr osbyte
-etxt: EQUB 0
-			EQUB$11
-			EQUS"Escape"
-			EQUB 0
-defabort: EQUB 5
-			 EQUS "ABORT"
-			 EQUB FNL(defquit)
-			 EQUB FNH(defquit)
+etxt: .byte 0
+			.byte$11
+			.text"Escape"
+			.byte 0
+defabort: .byte 5
+			 .text "ABORT"
+			 .byte <defquit
+			 .byte >defquit
 abort: jsr spp
-defquit: EQUB 4
-			 EQUS "QUIT"
-			 EQUB FNL(defdblpunt)
-			 EQUB FNH(defdblpunt)
+defquit: .byte 4
+			 .text "QUIT"
+			 .byte <defdblpunt
+			 .byte >defdblpunt
 quit: 
 qlp: jsr osnewl
 			ldx#255
@@ -882,18 +871,18 @@ qlp: jsr osnewl
 			jsr status
 			jmp qlp
 serror:
-			EQUB 0
-			EQUB 0
-			EQUS"Stapel leeg"
-			EQUB 0
+			.byte 0
+			.byte 0
+			.text"Stapel leeg"
+			.byte 0
 werror:
-			EQUB 0
-			EQUB 0
-			EQUS"Woord onbekend"
-			EQUB 0
-in: lda#FNL(intib)
+			.byte 0
+			.byte 0
+			.text"Woord onbekend"
+			.byte 0
+in: lda#<intib
 			sta ad
-			lda#FNH(intib)
+			lda#>intib
 			sta ad+1
 			jmp put
 voegtoe:
@@ -940,37 +929,37 @@ voegst: dey
 			adc here+1
 			sta here+1
 			rts
-crerror: EQUB 0
-			EQUB 0
-			EQUS"Geen goed woord"
-			EQUB 0
-defdblpunt: EQUB 1
-			 EQUS ":"
-			 EQUB FNL(defpntkomma)
-			 EQUB FNH(defpntkomma)
+crerror: .byte 0
+			.byte 0
+			.text"Geen goed woord"
+			.byte 0
+defdblpunt: .byte 1
+			 .text ":"
+			 .byte <defpntkomma
+			 .byte >defpntkomma
 dblpnt: jsr voegtoe
 			lda#1
 			sta state
 			rts
-defpntkomma:		EQUB $81
-			 EQUS ";"
-			 EQUB FNL(defcreate)
-			 EQUB FNH(defcreate)
+defpntkomma:		.byte $81
+			 .text ";"
+			 .byte <defcreate
+			 .byte >defcreate
 pntkomma:		lda#$60
 			jsr czet
 			lda#0
 			sta state
 			rts
-defcreate: EQUB 6
-			 EQUS "CREATE"
-			 EQUB FNL(defconstant)
-			 EQUB FNH(defconstant)
-create: jsr voegtoe
+defcreate:		.byte 6
+			.text "CREATE"
+			.byte <defconstant
+			.byte >defconstant
+create:			jsr voegtoe
 			lda#$20
 			jsr czet
-			lda#FNL(creac) 
+			lda#<creac 
 			jsr czet
-			lda#FNH(creac)
+			lda#>creac
 			jmp czet
 creac: pla
 			clc
@@ -980,16 +969,16 @@ creac: pla
 			adc#0
 			sta ad+1
 			jmp put
-defconstant: EQUB 8
-			 EQUS "CONSTANT"
-			 EQUB FNL(defstt)
-			 EQUB FNH(defstt)
+defconstant: .byte 8
+			 .text "CONSTANT"
+			 .byte <defstt
+			 .byte >defstt
 constant: jsr voegtoe
 			lda#$20
 			jsr czet
-			lda#FNL(constc) 
+			lda#<constc 
 			jsr czet
-			lda#FNH (constc)
+			lda#>constc
 			jsr czet
 			jmp komma
 constc: pla
@@ -1000,28 +989,28 @@ constc: pla
 			adc#0
 			sta ad+1
 			jmp atwrm
-defstt: EQUB 5
-			 EQUS "STATE"
-			 EQUB FNL(defbse)
-			 EQUB FNH(defbse)
-stt: lda#FNL(state)
+defstt: .byte 5
+			 .text "STATE"
+			 .byte <defbse
+			 .byte >defbse
+stt: lda#<state
 			sta ad
-			lda#FNH(state)
+			lda#>state
 			sta ad+1
 			jmp put
-defbse: EQUB 4
-			 EQUS "BASE"
-			 EQUB FNL(defnulis)
-			 EQUB FNH(defnulis)
-bse: lda#FNL(base)
+defbse: .byte 4
+			 .text "BASE"
+			 .byte <defnulis
+			 .byte >defnulis
+bse: lda#<base
 			sta ad
-			lda#FNH(base)
+			lda#>base
 			sta ad+1
 			jmp put
-defnulis: EQUB 2
-			 EQUS "0="
-			 EQUB FNL(deftrue)
-			 EQUB FNH(deftrue)
+defnulis: .byte 2
+			 .text "0="
+			 .byte <deftrue
+			 .byte >deftrue
 nulis: jsr dropit
 			lda#0
 			cmp ad
@@ -1030,10 +1019,10 @@ nulis: jsr dropit
 			bne nnul
 			jmp truelab
 nnul: jmp falselab
-defiss: EQUB 1
-			 EQUS "="
-			 EQUB FNL(defnulkl)
-			 EQUB FNH(defnulkl)
+defiss: .byte 1
+			 .text "="
+			 .byte <defnulkl
+			 .byte >defnulkl
 iss: jsr droptw
 			lda ad
 			cmp ad+2
@@ -1042,35 +1031,35 @@ iss: jsr droptw
 			cmp ad+3
 			bne falselab
 			beq truelab
-defnulkl: EQUB 2
-			 EQUS "0<"
-			 EQUB FNL(defnulgr)
-			 EQUB FNH(defnulgr)
+defnulkl: .byte 2
+			 .text "0<"
+			 .byte <defnulgr
+			 .byte >defnulgr
 nulkl: jsr dropit
 			lda ad+1
 			bmi truelab
 			bpl falselab
-deftrue: EQUB 4
-			 EQUS "TRUE"
-			 EQUB FNL(deffalse)
-			 EQUB FNH(deffalse)
+deftrue: .byte 4
+			 .text "TRUE"
+			 .byte <deffalse
+			 .byte >deffalse
 truelab:		ldy#0
 			sty ad+1
 			iny
 			sty ad
 			jmp put
-deffalse: EQUB 5
-			 EQUS "FALSE"
-			 EQUB FNL(defiss)
-			 EQUB FNH(defiss)
+deffalse: .byte 5
+			 .text "FALSE"
+			 .byte <defiss
+			 .byte >defiss
 falselab: lda#0
 			sta ad
 			sta ad+1
 			jmp put
-defnulgr: EQUB 2
-			 EQUS "0>"
-			 EQUB FNL(defkl)
-			 EQUB FNH(defkl)
+defnulgr: .byte 2
+			 .text "0>"
+			 .byte <defkl
+			 .byte >defkl
 nulgr: jsr dropit
 			lda ad+1
 			bmi falselab
@@ -1078,10 +1067,10 @@ nulgr: jsr dropit
 			lda ad
 			bne truelab
 			beq falselab
-defkl: EQUB 1
-			 EQUS "<"
-			 EQUB FNL(defgr)
-			 EQUB FNH(defgr)
+defkl: .byte 1
+			 .text "<"
+			 .byte <defgr
+			 .byte >defgr
 kl: jsr droptw
 			lda ad+1
 			cmp ad+3
@@ -1092,10 +1081,10 @@ klna: lda ad
 			cmp ad+2
 			bcs falselab
 			bcc truelab
-defgr: EQUB 1
-			 EQUS ">"
-			 EQUB FNL(defimmediate)
-			 EQUB FNH(defimmediate)
+defgr: .byte 1
+			 .text ">"
+			 .byte <defimmediate
+			 .byte >defimmediate
 gr: jsr droptw
 			lda ad+1
 			cmp ad+3
@@ -1113,10 +1102,10 @@ ukl: jsr droptw
 			beq klna
 			bcc truelab
 			bcs falselab
-defimmediate: EQUB 9
-			 EQUS "IMMEDIATE"
-			 EQUB FNL(deftype)
-			 EQUB FNH(deftype)
+defimmediate: .byte 9
+			 .text "IMMEDIATE"
+			 .byte <deftype
+			 .byte >deftype
 immediate: lda lwoord
 			sta ad
 			lda lwoord+1
@@ -1128,9 +1117,9 @@ immediate: lda lwoord
 			rts
 stcom:			lda#$20
 			jsr czet
-			lda#FNL(stcode) 
+			lda#<stcode
 			jsr czet
-			lda#FNH(stcode)
+			lda#>stcode
 			jsr czet
 			lda#0
 			sta ad+2
@@ -1154,9 +1143,9 @@ tprint: lda state
 			beq tprdoe
 			lda#$20
 			jsr czet
-			lda#FNL(tprintcode)
+			lda#<tprintcode
 			jsr czet
-			lda#FNH (tprintcode)
+			lda#>tprintcode
 			jsr czet
 			lda#0
 			sta ad+2
@@ -1231,7 +1220,7 @@ tprintcode: pla
 			adc#0
 			sta ad+1
 			jmp (ad)
-stcode: pla
+stcode:			pla
 			clc
 			adc#1
 			sta ad
@@ -1268,13 +1257,13 @@ stcode: pla
 			lda ad+1
 			adc#0
 			sta ad+1
-			 jmp (ad)
-deftype: EQUB 4
-			 EQUS "TYPE"
-			 EQUB FNL(defcls)
-			 EQUB FNH(defcls)
-type: jsr droptw
-typwrm: lda ad
+			jmp (ad)
+deftype:		.byte 4
+			.text "TYPE"
+			.byte <defcls
+			.byte >defcls
+type:			jsr droptw
+typwrm:			lda ad
 			clc
 			adc ad+2
 			sta ad+2
@@ -1282,7 +1271,7 @@ typwrm: lda ad
 			adc ad+3
 			sta ad+3
 			ldy#0
-tyloop: lda ad
+tyloop:			lda ad
 			cmp ad+2
 			bne tyhup
 			lda ad+1
@@ -1299,10 +1288,10 @@ tyhup:			lda (ad),Y
 			adc ad+1
 			sta ad+1
 			jmp tyloop
-defcls: EQUB 3
-			 EQUS "CLS"
-			 EQUB FNL(defexpect)
-			 EQUB FNH(defexpect)
+defcls: .byte 3
+			 .text "CLS"
+			 .byte <defexpect
+			 .byte >defexpect
 cls: lda#12
 			jmp oswrch
 droptw: jsr dropit
@@ -1311,10 +1300,10 @@ droptw: jsr dropit
 			lda ad+1
 			sta ad+3
 			jmp dropit
-defexpect: EQUB 6
-			 EQUS "EXPECT"
-			 EQUB FNL(defkomma)
-			 EQUB FNH(defkomma)
+defexpect: .byte 6
+			 .text "EXPECT"
+			 .byte <defkomma
+			 .byte >defkomma
 expect: jsr droptw
 exwrm: lda ad
 			sta ad+4
@@ -1378,10 +1367,10 @@ exdoedel:		sec
 			lda#127
 			jsr oswrch
 			jmp exloop
-defkomma: EQUB 1
-			 EQUS ","
-			 EQUB FNL(defckomma)
-			 EQUB FNH(defckomma)
+defkomma: .byte 1
+			 .text ","
+			 .byte <defckomma
+			 .byte >defckomma
 komma: jsr dropit
 komwrm: ldy#0
 			lda ad
@@ -1390,10 +1379,10 @@ komwrm: ldy#0
 			lda ad+1
 			sta (here),Y
 			jmp allot2
-defckomma: EQUB 2
-			 EQUS "C,"
-			 EQUB FNL(defnegate)
-			 EQUB FNH(defnegate)
+defckomma: .byte 2
+			 .text "C,"
+			 .byte <defnegate
+			 .byte >defnegate
 ckomma: jsr dropit
 ckomwrm: lda ad
 czet: ldy#0
@@ -1411,10 +1400,10 @@ eenpluswrm: lda#0
 			adc ad+1
 			sta ad+1
 			jmp put
-defnegate: EQUB 6
-			 EQUS "NEGATE"
-			 EQUB FNL(defmin)
-			 EQUB FNH(defmin)
+defnegate: .byte 6
+			 .text "NEGATE"
+			 .byte <defmin
+			 .byte >defmin
 negate: jsr dropit
 negwrm: lda ad
 			eor#$FF
@@ -1423,10 +1412,10 @@ negwrm: lda ad
 			eor#$FF
 			sta ad+1
 			jmp eenpluswrm
-defmin: EQUB 3
-			 EQUS "MIN"
-			 EQUB FNL(defmaal)
-			 EQUB FNH(defmaal)
+defmin: .byte 3
+			 .text "MIN"
+			 .byte <defmaal
+			 .byte >defmaal
 min: jsr droptw
 			lda ad
 			sec
@@ -1459,10 +1448,10 @@ masch: lsr ad+3
 			asl ad+4
 			rol ad+5
 			jmp maloop
-defmaal: EQUB 1
-			 EQUS "*"
-			 EQUB FNL(defupunt)
-			 EQUB FNH(defupunt)
+defmaal: .byte 1
+			 .text "*"
+			 .byte <defupunt
+			 .byte >defupunt
 maal: jsr droptw
 			lda ad
 			sta ad+4
@@ -1470,10 +1459,10 @@ maal: jsr droptw
 			sta ad+5
 			jsr maalwrm
 			jmp put
-defupunt: EQUB 2
-			 EQUS "U."
-			 EQUB FNL(defpunt)
-			 EQUB FNH(defpunt)
+defupunt: .byte 2
+			 .text "U."
+			 .byte <defpunt
+			 .byte >defpunt
 upunt: jsr dropit
 upuntwrm:		lda#$FF
 puntnbit: pha
@@ -1510,10 +1499,10 @@ puntadd: adc#48
 			pla
 			bpl puntout
 puntexit: jmp spc
-defpunt: EQUB 1
-			 EQUS "."
-			 EQUB FNL(defdecimal)
-			 EQUB FNH(defdecimal)
+defpunt: .byte 1
+			 .text "."
+			 .byte <defdecimal
+			 .byte >defdecimal
 punt: jsr dropit
 			lda ad+1
 			bpl upuntwrm
@@ -1529,10 +1518,10 @@ punt: jsr dropit
 			adc#0
 			sta ad+1
 			jmp upuntwrm
-defdecimal: EQUB 7
-			 EQUS "DECIMAL"
-			 EQUB FNL(defdp)
-			 EQUB FNH(defdp)
+defdecimal: .byte 7
+			 .text "DECIMAL"
+			 .byte <defdp
+			 .byte >defdp
 decimal: lda#10
 bazep: sta base
 			lda#0
@@ -1556,32 +1545,32 @@ brkla: sty ad
 			jsr put
 			jsr brkin
 			jmp abort
-brkin: jmp (ervek)
-erv: lda#FNL(ervek)
+brkin:			jmp (ervek)
+erv:			lda#<ervek
 			sta ad
-			lda#FNH(ervek)
+			lda#>ervek
 			sta ad+1
 			jmp put
-defdp: EQUB 2
-			 EQUS "DP"
-			 EQUB FNL(defexit)
-			 EQUB FNH(defexit)
+defdp: .byte 2
+			 .text "DP"
+			 .byte <defexit
+			 .byte >defexit
 dp: lda#FNL (here) 
 			sta ad
-			 lda#FNH(here)
+			 lda#>here
 			sta ad+1
 			jmp put
-defexit: EQUB 4
-			 EQUS "EXIT"
-			 EQUB 0
-			 EQUB 0
+defexit: .byte 4
+			 .text "EXIT"
+			 .byte 0
+			 .byte 0
 exit:			lda#$60
 			jmp czet
 //]
 //NEXT
 // ENDPROC
-//DEFFNL(X%)=X%MOD256
-//DEFFNH(X%)=X%DIV256
+//DEF<X%)=X%MOD256
+//DEF>X%)=X%DIV256
 //DEFPROCP
 //P%=P%+2
 // O%=O%+2
