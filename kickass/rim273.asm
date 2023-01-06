@@ -4,9 +4,8 @@
 //----------------------------------------------------------
 //----------------------------------------------------------
 			* = $8000 "Robert's Forth"		// <- The name will appear in the memory map when assembling
-
+			.encoding "ascii"
 			.const VS="2.73"
-//DIM ruim% &C00
 			.const maxlen=80
 			.const evvec=$220
 			.const brkv=$202
@@ -21,8 +20,7 @@
 			.const seed=ad+10
 			.const here=ad+15
 			.const lwoord=ad+17
-//?lwoord=0
-//	 lwoord?1=0
+			.const herstor=$1900
 			.const depth=ad+19
 			.const intib=ad+21
 			.const state=ad+23
@@ -117,7 +115,7 @@ put:			jsr xadr
 			inc depth
 			rts
 xadr:			lda depth
-xxadr:			asl A
+xxadr:			asl
 			tax
 			rts
 defdropit:		 .byte 4
@@ -406,7 +404,7 @@ query: lda#maxlen
 			lda#>buffer
 			sta ad+1
 			jmp exwrm
-tib: lda#FNL (buffer) 
+tib:			lda#<buffer
 			sta ad
 			lda#>buffer
 			sta ad+1
@@ -677,7 +675,7 @@ allot2: lda#2
 			sta here+1
 			rts
 nigetal:		jmp werror
-doewe:			jmp(ad)
+doewe:			jmp (ad)
 findit:			jsr skips
 			ldy intib
 			lda buffer,Y
@@ -827,13 +825,13 @@ init:			lda#<brkk
 			sta state+1
 			sta base+1
 			jmp decimal
-defrom: .byte 3
-			 .text "ROM"
-			 .byte <defram
-			 .byte >defram
-rom: lda herstor
+defrom:			.byte 3
+			.text "ROM"
+			.byte <defram
+			.byte >defram
+rom:			lda <herstor
 			sta here
-			lda herstor+1
+			lda >herstor
 			sta here+1
 			rts
 defram: .byte 3
@@ -1555,9 +1553,9 @@ defdp: .byte 2
 			 .text "DP"
 			 .byte <defexit
 			 .byte >defexit
-dp: lda#FNL (here) 
+dp:			lda#<here
 			sta ad
-			 lda#>here
+			lda#>here
 			sta ad+1
 			jmp put
 defexit: .byte 4
@@ -1576,7 +1574,6 @@ exit:			lda#$60
 // O%=O%+2
 //ENDPROC
 //DEFFNinitwrd
-//herstor=P%
 //PROCP
 //lstor=P%
 //		PROCP
