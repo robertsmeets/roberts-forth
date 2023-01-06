@@ -31,7 +31,22 @@
 			.const pad=$400
 start:			jmp langen
 			jmp serven
-			.byte $CF // ROM type 1100 1111
+//ROM type byte:
+//
+// b7 = ROM contains a service entry
+// b6 = ROM contains a language entry
+// b5 = ROM contains Tube transfer address and any other addresses after the copyright string
+// b4 = ROM contains Electron key expansions
+// b3-b0 = ROM CPU type
+// 0 6502 BASIC           8 Z80
+// 1 Turbo6502            9 32016
+// 2 6502                10 -
+// 3 68000               11 80186
+// 4 -                   12 80286
+// 5 -                   13 ARM
+// 6 -                   14 -
+// 7 PDP-11              15 - 
+			.byte %11000010
 			.byte cop-$8000
 			.byte 273 // Binaire versie
 rtxt:			.text "Robert's Forth"
@@ -792,18 +807,18 @@ comips: ldy intib
 comir: lda#13
 			sta buffer,Y
 			inc intib
-comr: rts
-langen: cmp#1
+comr:			rts
+langen:			cmp#1
 			beq startlab
 			rts
-defstart: .byte 5
-			 .text "START"
-			 .byte <definit
-			 .byte >definit
-startlab:			cli
+defstart:		.byte 5
+			.text "START"
+			.byte <definit
+			.byte >definit
+startlab:		cli
 			jsr init
 			jmp abort
-definit: .byte 4
+definit:		.byte 4
 			.text "INIT"
 			.byte <defrom
 			.byte >defrom
@@ -834,32 +849,32 @@ rom:			lda <herstor
 			lda >herstor
 			sta here+1
 			rts
-defram: .byte 3
-			 .text "RAM"
-			 .byte <defabort
-			 .byte >defabort
-ram: lda#131
+defram:			.byte 3
+			.text "RAM"
+			.byte <defabort
+			.byte >defabort
+ram:			lda#131
 			jsr osbyte
 			stx here
 			sty here+1
 			rts
-toev: lda#126
+toev:			lda#126
 			jsr osbyte
-etxt: .byte 0
+etxt:			.byte 0
 			.byte$11
 			.text"Escape"
 			.byte 0
-defabort: .byte 5
-			 .text "ABORT"
-			 .byte <defquit
-			 .byte >defquit
-abort: jsr spp
-defquit: .byte 4
-			 .text "QUIT"
-			 .byte <defdblpunt
-			 .byte >defdblpunt
+defabort:		.byte 5
+			.text "ABORT"
+			.byte <defquit
+			.byte >defquit
+abort:			jsr spp
+defquit:		.byte 4
+			.text "QUIT"
+			.byte <defdblpunt
+			.byte >defdblpunt
 quit: 
-qlp: jsr osnewl
+qlp:			jsr osnewl
 			ldx#255
 			txs
 			jsr query
@@ -868,23 +883,21 @@ qlp: jsr osnewl
 			bne qlp
 			jsr status
 			jmp qlp
-serror:
-			.byte 0
+serror:			.byte 0
 			.byte 0
 			.text"Stapel leeg"
 			.byte 0
-werror:
-			.byte 0
+werror:			.byte 0
 			.byte 0
 			.text"Woord onbekend"
 			.byte 0
-in: lda#<intib
+in:			lda#<intib
 			sta ad
 			lda#>intib
 			sta ad+1
 			jmp put
 voegtoe:
-voegwrm: jsr skips
+voegwrm:		jsr skips
 			lda intib
 			sta ad+2
 			jsr normsk
@@ -898,7 +911,7 @@ voegwrm: jsr skips
 			sta (here),Y
 			iny
 			ldx ad+2
-vlp: lda buffer,X
+vlp:			lda buffer,X
 			sta (here),Y
 			inx
 			iny
@@ -906,7 +919,7 @@ vlp: lda buffer,X
 			beq voegst
 			cmp#13
 			bne vlp
-voegst: dey
+voegst:			dey
 			lda lwoord
 			sta (here), Y
 			iny
@@ -927,15 +940,15 @@ voegst: dey
 			adc here+1
 			sta here+1
 			rts
-crerror: .byte 0
+crerror:		.byte 0
 			.byte 0
 			.text"Geen goed woord"
 			.byte 0
-defdblpunt: .byte 1
+defdblpunt:		.byte 1
 			 .text ":"
 			 .byte <defpntkomma
 			 .byte >defpntkomma
-dblpnt: jsr voegtoe
+dblpnt:			jsr voegtoe
 			lda#1
 			sta state
 			rts
@@ -959,7 +972,7 @@ create:			jsr voegtoe
 			jsr czet
 			lda#>creac
 			jmp czet
-creac: pla
+creac:			pla
 			clc
 			adc#1
 			sta ad
@@ -967,11 +980,11 @@ creac: pla
 			adc#0
 			sta ad+1
 			jmp put
-defconstant: .byte 8
+defconstant:		.byte 8
 			 .text "CONSTANT"
 			 .byte <defstt
 			 .byte >defstt
-constant: jsr voegtoe
+constant:		jsr voegtoe
 			lda#$20
 			jsr czet
 			lda#<constc 
@@ -1286,7 +1299,7 @@ tyhup:			lda (ad),Y
 			adc ad+1
 			sta ad+1
 			jmp tyloop
-defcls: .byte 3
+defcls:			.byte 3
 			 .text "CLS"
 			 .byte <defexpect
 			 .byte >defexpect
