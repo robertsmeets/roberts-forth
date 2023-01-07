@@ -1,31 +1,26 @@
 //----------------------------------------------------------
-//----------------------------------------------------------
-//					Simple IRQ
-//----------------------------------------------------------
-//----------------------------------------------------------
-			* = $8000 "Robert's Forth"		// <- The name will appear in the memory map when assembling
-			.encoding "ascii"
+			* = $8000 "Robert's Forth"		// The name will appear in the memory map when assembling
+			.encoding "ascii"               // needed, otherwise another charset will be used
 			.const VS="2.73"
 			.const maxlen=80
-			.const evvec=$220
 			.const brkv=$202
-			.const osbyte=$FFF4
-			.const oscli=$FFF7
-			.const osword=$FFF1
+			.const osfile=$FFDD
 			.const osnewl=$FFE7
 			.const osrdch=$FFE0
 			.const oswrch=$FFEE
-			.const osfile=$FFDD
+			.const osbyte=$FFF4
+			.const oscli=$FFF7
 			.const ad=$70
+			.const herstor=$1900
 			.const seed=ad+10
 			.const here=ad+15
 			.const lwoord=ad+17
-			.const herstor=$1900
 			.const depth=ad+19
 			.const intib=ad+21
 			.const state=ad+23
 			.const base=ad+25
 			.const ervek=ad+27
+			.const lstor=ad+29
 			.const stack=0
 			.const buffer=$500
 			.const pad=$400
@@ -108,7 +103,6 @@ shel:			lda rtxt,X
 			bne shel
 shkla:			jsr osnewl
 			jmp unniet
-//opt FNinitwrd
 defspc:			 .byte 5
 			 .text "SPACE"
 			 .byte <defspp
@@ -438,6 +432,13 @@ mode: jsr dropit
 			jsr oswrch
 			lda ad
 			jmp oswrch
+execute: jmp (ad+3)
+echtexec: jsr dropit
+			lda ad
+			sta ad+3
+			lda ad+1
+			sta ad+4
+			jmp execute
 defwords: .byte 5
 			 .text "WORDS"
 			 .byte <defliteral
@@ -521,6 +522,23 @@ voeni: ldy#0
 			and#$7F
 			jmp voet
 voewat: ldy#0
+			lda (ad+3),Y
+			and#$7F
+			clc
+			adc ad+3
+			sta ad
+			lda ad+4
+			adc#0
+			sta ad+1
+			lda ad
+			clc
+			adc#3
+			sta ad
+			lda ad+1
+			adc#0
+			sta ad+1
+			rts
+toexec:			ldy#0
 			lda (ad+3),Y
 			and#$7F
 			clc
@@ -823,9 +841,9 @@ definit:		.byte 4
 			.byte <defrom
 			.byte >defrom
 init:			lda#<brkk
-			sta$202
+			sta brkv
 			lda#>brkk
-			sta$203
+			sta brkv+1
 			lda#<type
 			sta ervek
 			lda#>type
@@ -1335,7 +1353,7 @@ exrt: jmp exrut
 exhup: lda#0
 			sta intib
 			jsr osrdch
-			 cmp#13
+			cmp#13
 			beq exret
 			cmp#27
 			beq exesc
@@ -1577,17 +1595,620 @@ defexit: .byte 4
 			 .byte 0
 exit:			lda#$60
 			jmp czet
-//]
-//NEXT
-// ENDPROC
-//DEF<X%)=X%MOD256
-//DEF>X%)=X%DIV256
-//DEFPROCP
-//P%=P%+2
-// O%=O%+2
-//ENDPROC
-//DEFFNinitwrd
-//PROCP
-//lstor=P%
-//		PROCP
-// =opt%
+abs: jsr dropit
+			lda ad+1
+			bpl absrt
+			jmp negwrm
+absrt: jmp put
+and: jsr droptw
+			lda ad
+			and ad+2
+			sta ad
+			lda ad+1
+			and ad+3
+			sta ad+1
+			jmp put
+or:				jsr droptw
+			lda ad
+			ora ad+2
+			sta ad
+			lda ad+1
+			ora ad+3
+			sta ad+1
+			jmp put
+xor: jsr droptw
+			lda ad
+			eor ad+2
+			sta ad
+			lda ad+1
+			eor ad+3
+			sta ad+1
+			jmp put
+tick: jsr findit
+tiok: lda ad
+			clc
+			adc#3
+			sta ad
+			lda ad+1
+			adc#0
+			sta ad+1
+			jsr put
+			lda state
+			beq ticklr
+			jmp literal
+ticklr: rts
+docode: jsr droptw
+			pla
+			tax
+			pla
+			tay
+			lda ad+1
+			pha
+			lda ad
+			pha
+			lda ad+3
+			pha
+			lda ad+2
+			pha
+			tya
+			pha
+			txa
+			pha
+			rts
+plusloopcode: jsr dropit
+			pla
+			tax
+			pla
+			tay
+			pla
+			clc
+			adc ad
+			sta ad+2
+			pla
+			adc ad+1
+			jmp looprest
+loopcode: pla
+			tax
+			pla
+			tay
+			pla
+			clc
+			adc#1
+			sta ad+2
+			pla
+			adc#0
+looprest: sta ad+3
+			pla
+			sta ad
+			pla
+			sta ad+1
+			lda ad+3
+			cmp ad+1
+			beq loopna
+			bmi loopvlg
+loopkla: txa
+			clc
+			adc#3
+			tax
+			tya
+			adc#0
+			pha
+			txa
+			pha
+			rts
+loopna: lda ad+2
+			cmp ad
+			bcs loopkla
+loopvlg: lda ad+1
+			pha
+			lda ad
+			pha
+			lda ad+3
+			pha
+			lda ad+2
+			pha
+			tya
+			pha
+			txa
+			pha
+			rts
+hex: lda#16
+			jmp bazep
+rnd:			ldy#$20
+rndnext:		 lda seed+2
+			lsr
+			lsr
+			lsr
+			eor seed+4
+			ror
+			rol seed
+			rol seed+1
+			rol seed+2
+			rol seed+3
+			rol seed+4
+			dey
+			bne rndnext
+			lda seed
+			sta ad
+			lda seed+1
+			sta ad+1
+			jmp put
+sed: jsr droptw
+			lda ad
+			sta seed
+			sta seed+4
+			lda ad+1
+			sta seed+1
+			lda ad+2
+			sta seed+2
+			lda ad+3
+			sta seed+3
+			rts
+hcompile: jsr findit
+			lda#$20
+			jsr czet
+			jmp komma 
+compile: jsr findit
+			 lda#$20
+			jsr czet
+			lda#<compcode
+			jsr czet
+			lda#>compcode
+			jsr czet
+			jmp komma
+compcode: lda#$20
+			jsr czet
+			pla
+			clc
+			adc#1
+			sta ad+2
+			sta ad
+			pla
+			adc#0
+			sta ad+1
+			sta ad+3
+			jsr atwrm
+			jsr komma
+			lda ad+2
+			clc
+			adc#1
+			tax
+			lda ad+3
+			adc#0
+			pha
+			txa
+			pha
+			rts
+save: lda#<buffer
+			clc
+			adc intib
+			sta pad
+			lda#>buffer
+			adc#0
+			sta pad+1
+			lda#$FF
+			sta pad+4
+			sta pad+5
+			sta pad+8
+			sta pad+9
+			sta pad+12
+			sta pad+13
+			sta pad+16
+			sta pad+17
+			lda#0
+			sta pad+2
+			sta pad+6
+			sta pad+10
+			lda#$80
+			sta pad+3
+			sta pad+7
+			sta pad+11
+			lda here
+			sta pad+$E
+			sta herstor
+			lda here+1
+			sta pad+$F
+			sta herstor+1
+			lda lwoord
+			sta lstor
+			lda lwoord+1
+			sta lstor+1
+			jsr normsk
+			lda#0
+			ldx#<pad
+			ldy#>pad
+			jmp osfile
+starld: jsr init
+			lda herstor
+			sta here
+			lda herstor+1
+			sta here+1
+			lda lstor
+			sta lwoord
+			sta ad+3
+			lda lstor+1
+			sta lwoord+1
+			sta ad+4
+			jsr toexec
+			lda ad
+			sta ad+3
+			lda ad+1
+			sta ad+4
+			jmp execute
+rot: jsr droptw
+			lda ad
+			pha
+			lda ad+1
+			pha
+			jsr dropit
+			lda ad
+			sta ad+4
+			lda ad+1
+			sta ad+5
+			pla
+			sta ad+1
+			pla
+			sta ad
+			jsr put
+			lda ad+2
+			sta ad
+			lda ad+3
+			sta ad+1
+			jsr put
+			lda ad+4
+			sta ad
+			lda ad+5
+			sta ad+1
+			jmp put
+leave: pla
+			tax
+			pla
+			tay
+			pla
+			pla
+			pla
+			sta ad+2
+			pla
+			sta ad+3
+			pha
+			lda ad+2
+			pha
+			lda ad+3
+			pha
+			lda ad+2
+			pha
+			tya
+			pha
+			txa
+			pha
+			rts
+twee: lda#2
+mbput: sta ad
+			jsr msb0
+			jmp put
+drie: lda#3
+			bne mbput
+deelo: jsr droptw
+			lda#0
+			sta ad+4
+			sta ad+5
+			ldx#16
+dlnext: asl ad
+			rol ad+1
+			rol ad+4
+			rol ad+5
+			lda ad+4
+			sec
+			sbc ad+2
+			tay
+			lda ad+5
+			sbc ad+3
+			bcc dldone
+			inc ad
+			sty ad+4
+			sta ad+5
+dldone: dex
+			bne dlnext
+			rts
+deel: jsr deelo
+			jmp put
+mod: jsr deelo
+			lda ad+4
+			sta ad
+			lda ad+5
+			sta ad+1
+			jmp put
+deelmod: jsr deelo
+			lda ad
+			pha
+			lda ad+1
+			pha
+			lda ad+4
+			sta ad
+			lda ad+5
+			sta ad+1
+			jsr put
+			pla
+			sta ad+1
+			pla
+			sta ad
+			jmp put
+vrdup: jsr dropit
+			jsr put
+			lda ad
+			bne vrnk
+			lda ad+1
+			bne vrnk
+			rts
+vrnk: jmp dup
+branchO: jsr dropit
+			lda ad
+			bne bra
+			lda ad+1
+			bne bra
+			rts
+bra: pla
+			clc
+			adc#3
+			tax
+			pla
+			adc#0
+			pha
+			txa
+			pha
+			rts
+call: jsr droptw
+			lda ad
+			pha
+			jsr dropit
+			ldx ad
+			ldy ad+1
+			pla
+			jsr calli
+			pha
+			stx ad
+			sty ad+1
+			jsr put
+			pla
+			sta ad
+			lda#0
+			sta ad+1
+			jmp put
+calli: jmp (ad+2)
+osc: jsr dropit
+			ldx ad
+			ldy ad+1
+			jmp oscli
+padad: lda#<pad
+			sta ad
+			lda#>pad
+			sta ad+1
+			jmp put
+tweemaal: jsr dropit
+			asl ad
+			rol ad+1
+			jmp put
+tweedeel: jsr dropit
+			lsr ad+1
+			ror ad
+			jmp put
+dropdr: jsr dropit
+			lda ad
+			sta ad+4
+			lda ad+1
+			sta ad+5
+			jsr dropit
+			lda ad
+			sta ad+2
+			lda ad+1
+			sta ad+3
+			jmp dropit
+cmove: jsr dropdr
+cmowrm: lda ad+1
+			cmp ad+3
+			beq cmna
+			bcc cmoveop
+			bcs cmoveneer
+cmna: lda ad
+			cmp ad+2
+			bcs cmoveneer
+cmoveop: lda ad+4
+			clc
+			adc ad
+			sta ad
+			lda ad+5
+			adc ad+1
+			sta ad+1
+			lda ad
+			sec
+			sbc#1
+			sta ad
+			lda ad+1
+			sbc#0
+			sta ad+1
+			lda ad+2
+			clc
+			adc ad+4
+			sta ad+2
+			lda ad+3
+			adc ad+5
+			sta ad+3
+			lda ad+2
+			sec
+			sbc#1
+			sta ad+2
+			lda ad+3
+			sbc#0
+			sta ad+3
+			ldy#0
+cmdlp: lda ad+4
+			bne cmdok
+			lda ad+5
+			bne cmdok
+			rts
+cmdok: jsr cmhup
+			dey
+			cpy#$FF
+			bne cmdlp
+			dec ad+1
+			dec ad+3
+			jmp cmdlp
+cmoveneer: ldy#0
+cmnlp: lda ad+4
+			bne cmnok
+			lda ad+5
+			bne cmnok
+			rts
+cmnok: jsr cmhup
+			iny
+			bne cmnlp
+			inc ad+1
+			inc ad+3
+			jmp cmnlp
+cmhup: lda (ad),Y
+			sta (ad+2),Y
+			lda ad+4
+			sec
+			sbc#1
+			sta ad+4
+			lda ad+5
+			sbc#0
+			sta ad+5
+			rts
+plusuit: jsr droptw
+			ldy#0
+			lda (ad+2),Y
+			clc
+			adc ad
+			sta (ad+2),Y
+			iny
+			lda (ad+2),Y
+			adc ad+1
+			sta (ad+2),Y
+			rts
+does: lda#$20
+			jsr czet
+			lda#<doeseen
+			jsr czet
+			lda#>doeseen
+			jsr czet
+			lda#$20
+			jsr czet
+			lda#<doestwee
+			jsr czet
+			lda#>doestwee
+			jmp czet
+doeseen: ldy#0
+			lda (lwoord),Y
+			and#$7F
+			clc
+			adc lwoord
+			sta ad
+			lda lwoord+1
+			adc#0
+			sta ad+1
+			lda ad
+			clc
+			adc#4
+			sta ad
+			lda ad+1
+			adc#0
+			sta ad+1
+			pla
+			clc
+			adc#1
+			ldy#0
+			sta (ad),Y
+			iny
+			pla
+			adc#0
+			sta (ad),Y
+			rts
+doestwee: pla
+			tax
+			pla
+			tay
+			pla
+			clc
+			adc#1
+			sta ad
+			pla
+			adc#0
+			sta ad+1
+			tya
+			pha
+			txa
+			pha
+			jmp put
+dad: lda#ad
+			sta ad
+			jsr msb0
+			jmp put
+drop: lda depth
+			beq serj
+			dec depth
+vrrt: rts
+serj: jmp serror
+vresc: lda$FF
+			and#$80
+			beq vrrt
+			jmp toev
+rdrop: pla
+			tax
+			pla
+			tay
+			pla
+			pla
+			tya
+			pha
+			txa
+			pha
+			rts
+rp: pla
+			tay
+			pla
+			ldx#255
+			txs
+			pha
+			tya
+			pha
+			rts
+word: jsr dropit
+			lda ad
+			pha
+			jsr padad
+			pla
+			sta ad
+			ldx intib
+worlp:			lda buffer
+			cmp#13
+			beq worret
+			cmp ad
+			beq worret
+			inx
+			bne worlp
+worret:			lda#<buffer
+			clc
+			adc intib
+			sta ad
+			lda#>buffer
+			adc#0
+			sta ad+1
+			lda#<(pad+1)
+			sta ad+2
+			lda#>(pad+1)
+			sta ad+3
+			txa
+			sec
+			sbc intib
+			sta pad
+			sta ad+4
+			lda#0
+			sta ad+5
+			lda buffer,X
+			cmp#13
+			beq worsla
+			inx
+worsla:			stx intib
+			jsr cmowrm
+			jmp skips
