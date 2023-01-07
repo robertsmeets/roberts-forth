@@ -857,6 +857,10 @@ init:			lda#<brkk
 			sta state
 			sta state+1
 			sta base+1
+			lda #$12
+			sta seed
+			lda #$34
+			sta seed+1
 			jmp decimal
 defrom:			.byte 3
 			.text "ROM"
@@ -901,21 +905,46 @@ qlp:			jsr osnewl
 			bne qlp
 			jsr status
 			jmp qlp
+//
+// error handling
+//
+// This uses the 6502 BRK instruction.
+// The  BRK instruction is followed by a sequence of bytes giving the following information:
+// BRK instruction - value &00
+// Fault number
+// Fault message - may contain any non-zero character
+// &00 to terminate message
+// When the 6502 encounters a BRK instruction the operating system places the address following the BRK instruction
+// in locations &FD and &FE. Thus these locations point to the "Fault number".
+// The operating system then indirects via location &202. In other words control is transferred to a routine
+// whose address is given in locations &202 (low byte) and &203 (high byte).
+// The default routine, whose address is given at the location, prints the fault message.
+// See constant brkv which points to 202
+//
+werror:		.byte 0
+			.byte 0
+			.text "Unknown word"
+			.byte 13
+			.byte 10
+			.byte 0
+crerror:		.byte 0
+			.byte 0
+			.text "Not a good word"
+			.byte 13
+			.byte 10
+			.byte 0
 serror:			.byte 0
 			.byte 0
-			.text"Stapel leeg"
-			.byte 0
-werror:			.byte 0
-			.byte 0
-			.text"Woord onbekend"
+			.text"Stack empty"
+			.byte 13
+			.byte 10
 			.byte 0
 in:			lda#<intib
 			sta ad
 			lda#>intib
 			sta ad+1
 			jmp put
-voegtoe:
-voegwrm:		jsr skips
+voegtoe:		jsr skips
 			lda intib
 			sta ad+2
 			jsr normsk
@@ -958,10 +987,6 @@ voegst:			dey
 			adc here+1
 			sta here+1
 			rts
-crerror:		.byte 0
-			.byte 0
-			.text"Geen goed woord"
-			.byte 0
 defdblpunt:		.byte 1
 			 .text ":"
 			 .byte <defpntkomma
@@ -1591,15 +1616,23 @@ dp:			lda#<here
 			jmp put
 defexit: .byte 4
 			 .text "EXIT"
-			 .byte 0
-			 .byte 0
+			 .byte <defabs
+			 .byte >defabs
 exit:			lda#$60
 			jmp czet
+defabs: .byte 3
+			 .text "ABS"
+			 .byte <defand
+			 .byte >defand
 abs: jsr dropit
 			lda ad+1
 			bpl absrt
 			jmp negwrm
 absrt: jmp put
+defand: .byte 3
+			 .text "AND"
+			 .byte <defor
+			 .byte >defor
 and: jsr droptw
 			lda ad
 			and ad+2
@@ -1608,6 +1641,10 @@ and: jsr droptw
 			and ad+3
 			sta ad+1
 			jmp put
+defor: .byte 2
+			 .text "OR"
+			 .byte <defxor
+			 .byte >defxor
 or:				jsr droptw
 			lda ad
 			ora ad+2
@@ -1616,6 +1653,10 @@ or:				jsr droptw
 			ora ad+3
 			sta ad+1
 			jmp put
+defxor: .byte 3
+			 .text "XOR"
+			 .byte <deftick
+			 .byte >deftick
 xor: jsr droptw
 			lda ad
 			eor ad+2
@@ -1624,6 +1665,10 @@ xor: jsr droptw
 			eor ad+3
 			sta ad+1
 			jmp put
+deftick: .byte 1
+			 .text "'"
+			 .byte <defdocode
+			 .byte >defdocode
 tick: jsr findit
 tiok: lda ad
 			clc
@@ -1637,6 +1682,10 @@ tiok: lda ad
 			beq ticklr
 			jmp literal
 ticklr: rts
+defdocode: .byte 6
+			 .text "DOCODE"
+			 .byte <defhex
+			 .byte >defhex
 docode: jsr droptw
 			pla
 			tax
@@ -1712,8 +1761,16 @@ loopvlg: lda ad+1
 			txa
 			pha
 			rts
+defhex: .byte 3
+			 .text "HEX"
+			 .byte <defrnd
+			 .byte >defrnd
 hex: lda#16
 			jmp bazep
+defrnd: .byte 3
+			 .text "RND"
+			 .byte <defcompile
+			 .byte >defcompile
 rnd:			ldy#$20
 rndnext:		 lda seed+2
 			lsr
@@ -1748,6 +1805,10 @@ hcompile: jsr findit
 			lda#$20
 			jsr czet
 			jmp komma 
+defcompile: .byte 7
+			 .text "COMPILE"
+			 .byte <defsave
+			 .byte >defsave
 compile: jsr findit
 			 lda#$20
 			jsr czet
@@ -1779,6 +1840,10 @@ compcode: lda#$20
 			txa
 			pha
 			rts
+defsave: .byte 4
+			 .text "SAVE"
+			 .byte <defrot
+			 .byte >defrot
 save: lda#<buffer
 			clc
 			adc intib
@@ -1835,6 +1900,10 @@ starld: jsr init
 			lda ad+1
 			sta ad+4
 			jmp execute
+defrot: .byte 3
+			 .text "ROT"
+			 .byte <defleave
+			 .byte >defleave
 rot: jsr droptw
 			lda ad
 			pha
@@ -1860,6 +1929,10 @@ rot: jsr droptw
 			lda ad+5
 			sta ad+1
 			jmp put
+defleave: .byte 5
+			 .text "LEAVE"
+			 .byte <deftwee
+			 .byte >deftwee
 leave: pla
 			tax
 			pla
@@ -1882,10 +1955,18 @@ leave: pla
 			txa
 			pha
 			rts
+deftwee: .byte 1
+			 .text "2"
+			 .byte <defdrie
+			 .byte >defdrie
 twee: lda#2
 mbput: sta ad
 			jsr msb0
 			jmp put
+defdrie: .byte 1
+			 .text "3"
+			 .byte <defdeel
+			 .byte >defdeel
 drie: lda#3
 			bne mbput
 deelo: jsr droptw
@@ -1910,8 +1991,16 @@ dlnext: asl ad
 dldone: dex
 			bne dlnext
 			rts
+defdeel: .byte 1
+			 .text "/"
+			 .byte <defmod
+			 .byte >defmod
 deel: jsr deelo
 			jmp put
+defmod: .byte 3
+			 .text "MOD"
+			 .byte <defcall
+			 .byte >defcall
 mod: jsr deelo
 			lda ad+4
 			sta ad
@@ -1957,6 +2046,10 @@ bra: pla
 			txa
 			pha
 			rts
+defcall: .byte 4
+			 .text "CALL"
+			 .byte <deftweemaal
+			 .byte >deftweemaal
 call: jsr droptw
 			lda ad
 			pha
@@ -1984,10 +2077,18 @@ padad: lda#<pad
 			lda#>pad
 			sta ad+1
 			jmp put
+deftweemaal: .byte 2
+			 .text "2*"
+			 .byte <deftweedeel
+			 .byte >deftweedeel
 tweemaal: jsr dropit
 			asl ad
 			rol ad+1
 			jmp put
+deftweedeel: .byte 2
+			 .text "2/"
+			 .byte <defcmove
+			 .byte >defcmove
 tweedeel: jsr dropit
 			lsr ad+1
 			ror ad
@@ -2003,6 +2104,10 @@ dropdr: jsr dropit
 			lda ad+1
 			sta ad+3
 			jmp dropit
+defcmove: .byte 5
+			 .text "CMOVE"
+			 .byte <defdoes
+			 .byte >defdoes
 cmove: jsr dropdr
 cmowrm: lda ad+1
 			cmp ad+3
@@ -2086,6 +2191,10 @@ plusuit: jsr droptw
 			adc ad+1
 			sta (ad+2),Y
 			rts
+defdoes: .byte 5
+			 .text "DOES>"
+			 .byte <defdrop
+			 .byte >defdrop
 does: lda#$20
 			jsr czet
 			lda#<doeseen
@@ -2144,6 +2253,10 @@ dad: lda#ad
 			sta ad
 			jsr msb0
 			jmp put
+defdrop: .byte 4
+			 .text "DROP"
+			 .byte 0
+			 .byte 0
 drop: lda depth
 			beq serj
 			dec depth
