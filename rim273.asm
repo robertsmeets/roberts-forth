@@ -51,6 +51,9 @@ cop:			.byte 0
 			.text "(C)"
 			.text " 1988 Robert Smeets"
 			.byte 0
+//
+// service entry
+//
 serven:			php
 			pha
 			tya
@@ -404,7 +407,7 @@ defquery: .byte 5
 			 .text "QUERY"
 			 .byte <defmode
 			 .byte >defmode
-query: lda#maxlen
+query:		lda#maxlen
 			sta ad+2
 			lda#0
 			sta ad+3
@@ -418,22 +421,22 @@ tib:			lda#<buffer
 			lda#>buffer
 			sta ad+1
 			jmp put
-status: jsr spc
+status: 	jsr spc     // prints out OK
 			lda#'O'
 			jsr oswrch
 			lda#'K'
-			 jmp oswrch
+			jmp oswrch
 defmode: .byte 4
 			 .text "MODE"
 			 .byte <defwords
 			 .byte >defwords
-mode: jsr dropit
+mode:		jsr dropit  // switch screen mode
 			lda#22
 			jsr oswrch
 			lda ad
 			jmp oswrch
 execute: jmp (ad+3)
-echtexec: jsr dropit
+echtexec: 	jsr dropit
 			lda ad
 			sta ad+3
 			lda ad+1
@@ -562,25 +565,25 @@ command: jsr comips
 			ldy ad+7
 			jmp oscli
 tostcom: jmp stcom
-doe: jsr droptw
+doe:		jsr droptw 		// find a word and execute it
 			lda ad+2
 			sta ad+8
 			lda ad
 			sta ad+6
 			lda ad+1
 			sta ad+7
-			jsr vind
+			jsr vind		// find the word
 			lda ad
 			bne doeiet
 			lda ad+1
 			bne doeiet
-			ldy#0
-			lda (ad+6),Y
+			ldy#0			// word not found in vocabulary
+			lda (ad+6),Y	// check for OS command starting with *
 			cmp#'*'
 			beq command
-			jsr getl
+			jsr getl		// not a word, and not a OS command, must be a literal
 			lda state
-			bne getcom
+			bne getcom		
 			rts
 getcom: jmp literal
 doeiet: jmp doeiets
@@ -588,21 +591,21 @@ defliteral: .byte 7
 			 .text "LITERAL"
 			 .byte <deflit
 			 .byte >deflit
-literal: 		lda#$20
-			jsr czet
+literal: 		lda#$20		// a literal was found. Add "jsr lit" to the code
+			jsr czet		
 			lda#<lit
 			jsr czet
 			lda#>lit
 			jsr czet
-			jmp komma
+			jmp komma		// add the literal to the code (2 bytes)
 deflit: .byte 3
 			 .text "LIT"
 			 .byte <definterpret
 			 .byte >definterpret
-lit: pla
-			clc
-			adc#1
-			sta ad
+lit:		pla			// compiled code for literal
+			clc			// grab 2 bytes after the PC and put it on the stack
+			adc#1		// get the PC by retrieving it from the return stack with pla
+			sta ad		// store it in x and y registers
 			tax
 			pla
 			adc#0
@@ -614,15 +617,15 @@ lit: pla
 			tax
 			tya
 			adc#0
-			pha
-			txa
+			pha			// put the PC back on the return stack
+			txa			// so execution will resume after the 2 byte literal
 			pha
 			jmp atwrm
-getl: ldy#0
+getl:		ldy#0
 			lda (ad+6),Y
 			cmp#'-'
 			bne getal
-			lda#1
+			lda#1				// negative number preceded by -
 			clc
 			adc ad+6
 			sta ad+6
@@ -645,7 +648,7 @@ getloop:		cpy ad+8
 			jmp getvoeg
 geta:			sec
 			sbc#('A'-10)
-getvoeg:		cmp base
+getvoeg:	cmp base		// if one of the digits is greater than or equal to the base, it's not a number
 			bcs nigetal
 			pha
 			iny
@@ -655,7 +658,7 @@ getvoeg:		cmp base
 			sta ad+3
 			lda base
 			sta ad+2
-			jsr maalwrm
+			jsr maalwrm     // multiply the digit with the base
 			lda ad
 			sta ad+4
 			lda ad+1
@@ -670,7 +673,7 @@ getvoeg:		cmp base
 			adc ad+5
 			sta ad+5
 			jmp getloop
-getend: lda ad+4
+getend:		lda ad+4
 			sta ad
 			lda ad+5
 			sta ad+1
@@ -798,7 +801,7 @@ forgok: lda ad+3
 			lda (ad),Y
 			sta lwoord+1
 			rts
-skips: ldy intib
+skips:		ldy intib		// skip spaces
 			lda buffer,Y
 			cmp#32
 			bne skret
@@ -826,8 +829,12 @@ comir: lda#13
 			sta buffer,Y
 			inc intib
 comr:			rts
-langen:			cmp#1
-			beq startlab
+//
+// language entry
+//
+langen:
+			cmp#1
+            beq startlab
 			rts
 defstart:		.byte 5
 			.text "START"
@@ -891,12 +898,12 @@ defabort:		.byte 5
 			.byte <defquit
 			.byte >defquit
 abort:			jsr spp
+			jmp qlp
 defquit:		.byte 4
 			.text "QUIT"
 			.byte <defdblpunt
 			.byte >defdblpunt
-quit: 
-qlp:			jsr osnewl
+qlp:		jsr osnewl
 			ldx#255
 			txs
 			jsr query
@@ -1346,7 +1353,7 @@ defcls:			.byte 3
 			 .text "CLS"
 			 .byte <defexpect
 			 .byte >defexpect
-cls: lda#12
+cls:		lda#12             // clear screen
 			jmp oswrch
 droptw: jsr dropit
 			lda ad
@@ -1375,17 +1382,18 @@ exloop: lda ad
 			cmp ad+3
 			bne exhup
 exrt: jmp exrut
-exhup: lda#0
+exhup:
+			lda#0
 			sta intib
-			jsr osrdch
-			cmp#13
+			jsr osrdch	// read a character from the keyboard
+			cmp#13      // newline?
 			beq exret
-			cmp#27
+			cmp#27		// escape?
 			beq exesc
-			cmp#127
+			cmp#127     // delete?
 			beq exdel
 			jsr oswrch
-			cmp#32
+			cmp#32		// space?
 			bcc exloop
 			cmp#128
 			bcs exloop
@@ -1466,11 +1474,11 @@ negwrm: lda ad
 			eor#$FF
 			sta ad+1
 			jmp eenpluswrm
-defmin: .byte 3
-			 .text "MIN"
+defmin: .byte 1
+			 .text "-"
 			 .byte <defmaal
 			 .byte >defmaal
-min: jsr droptw
+min: jsr droptw				// subtract
 			lda ad
 			sec
 			sbc ad+2
