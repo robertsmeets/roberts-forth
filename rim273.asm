@@ -1443,8 +1443,8 @@ komwrm: ldy#0
 			jmp allot2
 defckomma: .byte 2
 			 .text "C,"
-			 .byte <defnegate
-			 .byte >defnegate
+			 .byte <defeenplus
+			 .byte >defeenplus
 ckomma: jsr dropit
 ckomwrm: lda ad
 czet: ldy#0
@@ -1453,6 +1453,10 @@ allotl:			ldx#1
 			stx ad
 			jsr msb0
 			jmp alloti
+defeenplus:	.byte 2
+			.text "1+"
+			.byte <defeenmin
+			.byte >defeenmin
 eenplus: jsr dropit
 eenpluswrm: lda#0
 			sec
@@ -1460,6 +1464,45 @@ eenpluswrm: lda#0
 			sta ad
 			lda#0
 			adc ad+1
+			sta ad+1
+			jmp put
+defeenmin: .byte 2
+			.text "1-"
+			.byte <deftweeplus
+			.byte >deftweeplus
+eenmin: jsr dropit
+			lda ad
+			clc
+			sbc#0
+			sta ad
+			lda ad+1
+			sbc#0
+			sta ad+1
+			jmp put
+deftweeplus: .byte 2
+			.text "2+"
+			.byte <deftweemin
+			.byte >deftweemin
+tweeplus:	jsr dropit
+			lda#1
+			sec
+			adc ad
+			sta ad
+			lda#0
+			adc ad+1
+			sta ad+1
+			jmp put
+deftweemin: .byte 2
+			.text "2-"
+			.byte <defnegate
+			.byte >defnegate
+tweemin:		jsr dropit
+			lda ad
+			clc
+			sbc#1
+			sta ad
+			lda ad+1
+			sbc#0
 			sta ad+1
 			jmp put
 defnegate: .byte 6
@@ -1690,10 +1733,10 @@ tiok: lda ad
 			beq ticklr
 			jmp literal
 ticklr: rts
-defdocode: .byte 6
-			 .text "DOCODE"
-			 .byte <defhex
-			 .byte >defhex
+defdocode: .byte 4
+			 .text "(DO)"
+			 .byte <defplusloopcode
+			 .byte >defplusloopcode
 docode: jsr droptw
 			pla
 			tax
@@ -1712,6 +1755,10 @@ docode: jsr droptw
 			txa
 			pha
 			rts
+defplusloopcode: .byte 7
+			 .text "(+LOOP)"
+			 .byte <defloopcode
+			 .byte >defloopcode
 plusloopcode: jsr dropit
 			pla
 			tax
@@ -1724,6 +1771,10 @@ plusloopcode: jsr dropit
 			pla
 			adc ad+1
 			jmp looprest
+defloopcode: .byte 6
+			 .text "(LOOP)"
+			 .byte <defhex
+			 .byte >defhex
 loopcode: pla
 			tax
 			pla
@@ -2007,8 +2058,8 @@ deel: jsr deelo
 			jmp put
 defmod: .byte 3
 			 .text "MOD"
-			 .byte <defcall
-			 .byte >defcall
+			 .byte <defbranch0
+			 .byte >defbranch0
 mod: jsr deelo
 			lda ad+4
 			sta ad
@@ -2038,7 +2089,11 @@ vrdup: jsr dropit
 			bne vrnk
 			rts
 vrnk: jmp dup
-branchO: jsr dropit
+defbranch0: .byte 7
+			 .text "0BRANCH"
+			 .byte <defcall
+			 .byte >defcall
+branch0: jsr dropit
 			lda ad
 			bne bra
 			lda ad+1
