@@ -44,10 +44,10 @@ start:			jmp langen
 			.byte %11000010
 			.byte cop-$8000
 			.byte 273 // Binaire versie
-rtxt:			.text "Robert's Forth"
+rtxt:		.text "Robert's Forth"
 			.byte 0
 			.text "Versie "+VS
-cop:			.byte 0
+cop:		.byte 0
 			.text "(C)"
 			.text " 1988 Robert Smeets"
 			.byte 0
@@ -89,28 +89,28 @@ unwel:			lda#142
 unpunt:			cpx#2
 			bpl unwel
 			bmi unniet
-uncom:			.text "FORTH"
-shelp:			lda ($F2),y
+uncom:		.text "FORTH"
+shelp:		lda ($F2),y
 			cmp#32
 			bne shna
 			iny
 			bne shelp
-shna:			cmp#13
+shna:		cmp#13
 			bne unniet
 			jsr osnewl
 			ldx#0
-shel:			lda rtxt,X
+shel:		lda rtxt,X	// print out the Robert's Forth string, stored at rtxt
 			beq shkla
 			jsr oswrch
 			inx
 			bne shel
-shkla:			jsr osnewl
+shkla:		jsr osnewl
 			jmp unniet
-defspc:			 .byte 5
+defspc:		 .byte 5
 			 .text "SPACE"
 			 .byte <defspp
 			 .byte >defspp
-spc:			lda#32
+spc:		lda#32
 			jmp oswrch
 defspp:			.byte 3
 			.text "SP!"
@@ -446,8 +446,7 @@ defwords: .byte 5
 			 .text "WORDS"
 			 .byte <defliteral
 			 .byte >defliteral
-words: jsr osnewl
-			jsr osnewl
+words: 		jsr osnewl
 			lda lwoord
 			sta ad+5
 			lda lwoord+1
@@ -456,7 +455,6 @@ wordz: lda ad+5
 			bne wook
 			lda ad+6
 			bne wook
-			jsr osnewl
 			jmp osnewl
 wook: lda#1
 			clc
@@ -712,7 +710,7 @@ allot2: lda#2
 			rts
 nigetal:		jmp werror
 doewe:			jmp (ad)
-findit:			jsr skips
+findit:		jsr skips            // skip spaces
 			ldy intib
 			lda buffer,Y
 			cmp#13
@@ -741,7 +739,7 @@ findit:			jsr skips
 			lda ad+1
 			bne firet
 			jmp werror
-firet: rts
+firet:		rts
 definterpret: .byte 9
 			 .text "INTERPRET"
 			 .byte <defforget
@@ -836,18 +834,18 @@ langen:
 			cmp#1
             beq startlab
 			rts
-defstart:		.byte 5
+defstart:	.byte 5
 			.text "START"
 			.byte <definit
 			.byte >definit
-startlab:		cli
+startlab:	cli
 			jsr init
 			jmp abort
-definit:		.byte 4
+definit:	.byte 4
 			.text "INIT"
 			.byte <defrom
 			.byte >defrom
-init:			lda#<brkk
+init:		lda#<brkk
 			sta brkv
 			lda#>brkk
 			sta brkv+1
@@ -869,7 +867,7 @@ init:			lda#<brkk
 			lda #$34
 			sta seed+1
 			jmp decimal
-defrom:			.byte 3
+defrom:		.byte 3
 			.text "ROM"
 			.byte <defram
 			.byte >defram
@@ -887,19 +885,22 @@ ram:			lda#131
 			stx here
 			sty here+1
 			rts
-toev:			lda#126
+toev:		lda#126
 			jsr osbyte
-etxt:			.byte 0
+etxt:		.byte 0
 			.byte$11
 			.text"Escape"
 			.byte 0
-defabort:		.byte 5
+defabort:	.byte 5
 			.text "ABORT"
 			.byte <defquit
 			.byte >defquit
-abort:			jsr spp
+abort:		jsr spp
+			lda status
+			beq qlp
+			jsr status
 			jmp qlp
-defquit:		.byte 4
+defquit:	.byte 4
 			.text "QUIT"
 			.byte <defdblpunt
 			.byte >defdblpunt
@@ -1632,7 +1633,7 @@ bazep: sta base
 			lda#0
 			sta base+1
 			rts
-brkk:			lda$FD
+brkk:		lda$FD			// target for the break vector, when an error happens
 			clc
 			adc#1
 			sta ad
@@ -1641,17 +1642,17 @@ brkk:			lda$FD
 			sta ad+1
 			jsr put
 			ldy#0
-brklp:			lda (ad),Y
+brklp:		lda (ad),Y
 			beq brkla
 			iny
 			bne brklp
-brkla: sty ad
+brkla:		sty ad
 			jsr msb0
 			jsr put
 			jsr brkin
 			jmp abort
-brkin:			jmp (ervek)
-erv:			lda#<ervek
+brkin:		jmp (ervek)
+erv:		lda#<ervek
 			sta ad
 			lda#>ervek
 			sta ad+1
@@ -1828,8 +1829,8 @@ hex: lda#16
 			jmp bazep
 defrnd: .byte 3
 			 .text "RND"
-			 .byte <defcompile
-			 .byte >defcompile
+			 .byte <defhcompile
+			 .byte >defhcompile
 rnd:			ldy#$20
 rndnext:		 lda seed+2
 			lsr
@@ -1860,10 +1861,14 @@ sed: jsr droptw
 			lda ad+3
 			sta seed+3
 			rts
-hcompile: jsr findit
+defhcompile: .byte $89
+			 .text "[COMPILE]"
+			 .byte <defcompile
+			 .byte >defcompile
+hcompile:	jsr findit
 			lda#$20
 			jsr czet
-			jmp komma 
+			jmp komwrm
 defcompile: .byte 7
 			 .text "COMPILE"
 			 .byte <defsave
@@ -1942,7 +1947,7 @@ save: lda#<buffer
 			ldx#<pad
 			ldy#>pad
 			jmp osfile
-starld: jsr init
+starld:		jsr init
 			lda herstor
 			sta here
 			lda herstor+1
@@ -2028,7 +2033,8 @@ defdrie: .byte 1
 			 .byte >defdeel
 drie: lda#3
 			bne mbput
-deelo: jsr droptw
+deelo:		jsr droptw
+			// check for negative divisor
 			lda#0
 			sta ad+4
 			sta ad+5
