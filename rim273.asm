@@ -126,22 +126,22 @@ put:			jsr xadr
 			sta stack+1,X
 			inc depth
 			rts
-xadr:			lda depth
-xxadr:			asl
+xadr:		lda depth
+xxadr:		asl
 			tax
 			rts
 defdropit:		 .byte 4
 			 .text "DROP"
 			 .byte <defrat
 			 .byte >defrat
-dropit:			lda depth
-			beq serr
-			jsr xxadr
-			lda stack-2,X
+dropit:		lda depth           // drop the top of the stack, and retain the value in ad and ad+1
+			beq serr            // stack empty, print error message
+			jsr xxadr           // multiply depth by 2, to get the offset
+			lda stack-2,X       // get the value on the stack and place it in ad and ad+1
 			sta ad
 			lda stack-1,X
 			sta ad+1
-			dec depth
+			dec depth           // decrement the depth
 			rts
 serr: jmp serror
 defrat: .byte 2
@@ -2324,8 +2324,8 @@ dad: lda#ad
 			jmp put
 defdrop: .byte 4
 			 .text "DROP"
-			 .byte 0
-			 .byte 0
+			 .byte <defhexdump
+			 .byte >defhexdump
 drop: lda depth
 			beq serj
 			dec depth
@@ -2362,14 +2362,14 @@ word: jsr dropit
 			pla
 			sta ad
 			ldx intib
-worlp:			lda buffer
+worlp:		lda buffer
 			cmp#13
 			beq worret
 			cmp ad
 			beq worret
 			inx
 			bne worlp
-worret:			lda#<buffer
+worret:		lda#<buffer
 			clc
 			adc intib
 			sta ad
@@ -2391,6 +2391,34 @@ worret:			lda#<buffer
 			cmp#13
 			beq worsla
 			inx
-worsla:			stx intib
+worsla:		stx intib
 			jsr cmowrm
 			jmp skips
+defhexdump: .byte 7                // print a hexdump starting with the address 
+			.text "HEXDUMP"        // of the top of the stack for 16 bytes
+			.byte 0
+			.byte 0
+hexdump: 	jsr dropit
+			ldy#0
+hloop:		lda (ad),Y
+			tax
+			and #$f0                // grab the higher nibble
+			lsr
+			lsr
+			lsr
+			lsr
+			jsr hpuntout
+			txa
+			and #$f                 // lower nibble
+			jsr hpuntout
+			jsr spc
+			iny
+			cpy #17
+			bne hloop
+			rts
+hpuntout: cmp#10
+			bcc hpuntadd      // less than 10
+			 adc#('A' - 11)    // since carry = 1, we add one less
+			 jmp oswrch
+hpuntadd: adc#'0'
+			jmp oswrch
