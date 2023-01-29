@@ -1324,8 +1324,8 @@ deftype:		.byte 4
 			.text "TYPE"
 			.byte <defcls
 			.byte >defcls
-type:			jsr droptw
-typwrm:			lda ad
+type:		jsr droptw
+typwrm:		lda ad
 			clc
 			adc ad+2
 			sta ad+2
@@ -1333,14 +1333,14 @@ typwrm:			lda ad
 			adc ad+3
 			sta ad+3
 			ldy#0
-tyloop:			lda ad
+tyloop:		lda ad
 			cmp ad+2
 			bne tyhup
 			lda ad+1
 			cmp ad+3
 			bne tyhup
 			rts
-tyhup:			lda (ad),Y
+tyhup:		lda (ad),Y
 			jsr oswrch
 			clc
 			lda#1
@@ -1350,7 +1350,7 @@ tyhup:			lda (ad),Y
 			adc ad+1
 			sta ad+1
 			jmp tyloop
-defcls:			.byte 3
+defcls:		.byte 3
 			 .text "CLS"
 			 .byte <defexpect
 			 .byte >defexpect
