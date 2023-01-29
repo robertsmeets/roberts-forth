@@ -12,17 +12,17 @@
 			.const oscli=$FFF7
 			.const ad=$70
 			.const herstor=$1900
-			.const seed=ad+10
-			.const here=ad+15
-			.const lwoord=ad+17
-			.const depth=ad+19
-			.const intib=ad+21
-			.const state=ad+23
-			.const base=ad+25
-			.const ervek=ad+27
+			.const seed=ad+10               // seed for the random generator
+			.const here=ad+15               // location of the first byte of free memory
+			.const lwoord=ad+17             // lwoord contains the first word, used to traverse the linked list of words
+			.const depth=ad+19              // depth of the stack
+			.const intib=ad+21              // reading index in the input buffer
+			.const state=ad+23              // state = 0 when interpreting, 1 when compiling a word
+			.const base=ad+25               // numeric base for printing. i.e. 10 for decimal, 16 for hex
+			.const ervek=ad+27              // location of error handling
 			.const lstor=ad+29
 			.const stack=0
-			.const buffer=$500
+			.const buffer=$500              // typed in text ends up here
 			.const pad=$400
 start:			jmp langen
 			jmp serven
@@ -416,7 +416,7 @@ query:		lda#maxlen
 			lda#>buffer
 			sta ad+1
 			jmp exwrm
-tib:			lda#<buffer
+tib:		lda#<buffer
 			sta ad
 			lda#>buffer
 			sta ad+1
@@ -427,16 +427,16 @@ status: 	jsr spc     // prints out OK
 			lda#'K'
 			jmp oswrch
 defmode: .byte 4
-			 .text "MODE"
-			 .byte <defwords
-			 .byte >defwords
+			.text "MODE"
+			.byte <defwords
+			.byte >defwords
 mode:		jsr dropit  // switch screen mode
 			lda#22
 			jsr oswrch
 			lda ad
 			jmp oswrch
-execute: jmp (ad+3)
-echtexec: 	jsr dropit
+execute:	jmp (ad+3)
+echtexec: 	jsr dropit  // jump to the address on top of the stack
 			lda ad
 			sta ad+3
 			lda ad+1
@@ -446,7 +446,7 @@ defwords: .byte 5
 			 .text "WORDS"
 			 .byte <defliteral
 			 .byte >defliteral
-words: 		jsr osnewl
+words: 		jsr osnewl  // show a list of words
 			lda lwoord
 			sta ad+5
 			lda lwoord+1
@@ -483,11 +483,11 @@ wook: lda#1
 			pla
 			sta ad+5
 			jmp wordz
-vind: lda lwoord
+vind:		lda lwoord
 			sta ad+3
 			lda lwoord+1
 			sta ad+4
-vindz: lda ad+3
+vindz:		lda ad+3
 			bne vook
 			lda ad+4
 			bne vook
@@ -495,7 +495,7 @@ vindz: lda ad+3
 			sta ad
 			sta ad+1
 			rts
-vook: ldy#0
+vook:		ldy#0
 			lda (ad+3),Y
 			and #$7F
 			cmp ad+2
@@ -539,7 +539,7 @@ voewat: ldy#0
 			adc#0
 			sta ad+1
 			rts
-toexec:			ldy#0
+toexec:		ldy#0
 			lda (ad+3),Y
 			and#$7F
 			clc
@@ -556,13 +556,13 @@ toexec:			ldy#0
 			adc#0
 			sta ad+1
 			rts
-command: jsr comips
+command:	jsr comips      // execute a OS * command with OSCLI
 			lda state
 			bne tostcom
 			ldx ad+6
 			ldy ad+7
 			jmp oscli
-tostcom: jmp stcom
+tostcom:	jmp stcom
 doe:		jsr droptw 		// find a word and execute it
 			lda ad+2
 			sta ad+8
@@ -589,7 +589,7 @@ defliteral: .byte 7
 			 .text "LITERAL"
 			 .byte <deflit
 			 .byte >deflit
-literal: 		lda#$20		// a literal was found. Add "jsr lit" to the code
+literal: 	lda#$20		// a literal was found. Add "jsr lit" to the code
 			jsr czet		
 			lda#<lit
 			jsr czet
@@ -597,9 +597,9 @@ literal: 		lda#$20		// a literal was found. Add "jsr lit" to the code
 			jsr czet
 			jmp komma		// add the literal to the code (2 bytes)
 deflit: .byte 3
-			 .text "LIT"
-			 .byte <definterpret
-			 .byte >definterpret
+			.text "LIT"
+			.byte <definterpret
+			.byte >definterpret
 lit:		pla			// compiled code for literal
 			clc			// grab 2 bytes after the PC and put it on the stack
 			adc#1		// get the PC by retrieving it from the return stack with pla
@@ -644,7 +644,7 @@ getloop:		cpy ad+8
 			sec
 			sbc#'0'
 			jmp getvoeg
-geta:			sec
+geta:		sec
 			sbc#('A'-10)
 getvoeg:	cmp base		// if one of the digits is greater than or equal to the base, it's not a number
 			bcs nigetal
@@ -708,11 +708,11 @@ allot2: lda#2
 			adc here+1
 			sta here+1
 			rts
-nigetal:		jmp werror
-doewe:			jmp (ad)
-findit:		jsr skips            // skip spaces
-			ldy intib
-			lda buffer,Y
+nigetal:	jmp werror
+doewe:		jmp (ad)
+findit:		jsr skips            // find a word that is pointed to by buffer+intib. Skip spaces
+			ldy intib            // current offset in the buffer
+			lda buffer,Y         // grab a char
 			cmp#13
 			beq firet
 			lda intib
@@ -723,19 +723,19 @@ findit:		jsr skips            // skip spaces
 			lda#0
 			adc#>buffer
 			sta ad+1
-			jsr put
-			jsr normsk
-			lda intib
+			jsr put              // put the current location on the stack
+			jsr normsk           // find the end of the word
+			lda intib            // buffer+intib now points to the char after the word
 			sec
-			sbc ad+2
-			sta ad
+			sbc ad+2             // subtract the beginning of the word
+			sta ad               // ad now contains the length of the word
 			jsr msb0
-			jsr put
-			jsr skips
+			jsr put              // put the length of the word on the stack
+			jsr skips            // skip whitespace
 			jsr droptw
-			jsr vind
-			lda ad
-			bne firet
+			jsr vind             // find the word in the vocabulary
+			lda ad               // if not found, ad and ad+1 are zero
+			bne firet            // if found, ad and ad+1 contain the address of the code
 			lda ad+1
 			bne firet
 			jmp werror
@@ -744,9 +744,9 @@ definterpret: .byte 9
 			 .text "INTERPRET"
 			 .byte <defforget
 			 .byte >defforget
-interpret: lda#0
+interpret:	lda#0
 			sta intib
-intp: jsr skips
+intp:		jsr skips
 			ldy intib
 			lda buffer,Y
 			cmp#13
@@ -805,8 +805,8 @@ skips:		ldy intib		// skip spaces
 			bne skret
 			inc intib
 			jmp skips
-skret: rts
-normsk: ldy intib
+skret:		rts
+normsk:		ldy intib       // skip chars to find the end of the word
 			lda buffer,Y
 			cmp#32
 			beq nkret
@@ -814,8 +814,8 @@ normsk: ldy intib
 			beq nkret
 			inc intib
 			jmp normsk
-nkret: rts
-comips: ldy intib
+nkret:		rts
+comips:		ldy intib
 			lda buffer, Y
 			cmp#'\'
 			beq comir
@@ -876,11 +876,11 @@ rom:			lda <herstor
 			lda >herstor
 			sta here+1
 			rts
-defram:			.byte 3
+defram:		.byte 3
 			.text "RAM"
 			.byte <defabort
 			.byte >defabort
-ram:			lda#131
+ram:		lda#131
 			jsr osbyte
 			stx here
 			sty here+1
@@ -904,7 +904,7 @@ defquit:	.byte 4
 			.text "QUIT"
 			.byte <defdblpunt
 			.byte >defdblpunt
-qlp:		jsr osnewl
+qlp:		jsr osnewl			// main query/interpret loop
 			ldx#255
 			txs
 			jsr query
@@ -1007,7 +1007,7 @@ defpntkomma:		.byte $81
 			 .text ";"
 			 .byte <defcreate
 			 .byte >defcreate
-pntkomma:		lda#$60
+pntkomma:	lda#$60
 			jsr czet
 			lda#0
 			sta state
@@ -1434,8 +1434,8 @@ defkomma: .byte 1
 			 .text ","
 			 .byte <defckomma
 			 .byte >defckomma
-komma: jsr dropit
-komwrm: ldy#0
+komma:		jsr dropit
+komwrm:		ldy#0
 			lda ad
 			sta (here),Y
 			iny
@@ -1448,9 +1448,9 @@ defckomma: .byte 2
 			 .byte >defeenplus
 ckomma: jsr dropit
 ckomwrm: lda ad
-czet: ldy#0
+czet:		ldy#0
 			sta (here),Y
-allotl:			ldx#1
+allotl:		ldx#1
 			stx ad
 			jsr msb0
 			jmp alloti
@@ -1866,15 +1866,16 @@ defhcompile: .byte $89
 			 .byte <defcompile
 			 .byte >defcompile
 hcompile:	jsr findit
+			jsr put
 			lda#$20
-			jsr czet
-			jmp komwrm
+			jsr czet		
+			jmp komma
 defcompile: .byte 7
-			 .text "COMPILE"
-			 .byte <defsave
-			 .byte >defsave
-compile: jsr findit
-			 lda#$20
+			.text "COMPILE"
+			.byte <defsave
+			.byte >defsave
+compile:	jsr findit
+			lda#$20
 			jsr czet
 			lda#<compcode
 			jsr czet
