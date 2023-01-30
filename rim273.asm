@@ -817,7 +817,7 @@ normsk:		ldy intib       // skip chars to find the end of the word
 nkret:		rts
 comips:		ldy intib
 			lda buffer, Y
-			cmp#'\'
+			cmp#'\'        // backslash can be used to end a command, this is used in DEF14 ERRDEF definition
 			beq comir
 			cmp#13
 			beq comr
@@ -974,7 +974,7 @@ vlp:			lda buffer,X
 			beq voegst
 			cmp#13
 			bne vlp
-voegst:			dey
+voegst:		dey
 			lda lwoord
 			sta (here), Y
 			iny
@@ -1177,7 +1177,7 @@ immediate: lda lwoord
 			ora#$80
 			sta (ad),Y
 			rts
-stcom:			lda#$20
+stcom:		lda#$20           // compile an OS command for execution later
 			jsr czet
 			lda#<stcode
 			jsr czet
@@ -1186,13 +1186,13 @@ stcom:			lda#$20
 			lda#0
 			sta ad+2
 			ldy#1
-stplp:			lda (ad+6),Y
+stplp:		lda (ad+6),Y
 			cmp#13
 			beq stprret
 			sta (here),Y
 			iny
 			jmp stplp
-stprret:		sta (here),Y
+stprret:	sta (here),Y
 			tya
 			ldy#0
 			sta (here),Y
@@ -1200,7 +1200,7 @@ stprret:		sta (here),Y
 			iny
 			sty ad
 			jsr msb0
-			jmp allot
+			jmp alloti
 tprint: lda state
 			beq tprdoe
 			lda#$20
@@ -1213,7 +1213,7 @@ tprint: lda state
 			sta ad+2
 			ldx intib
 			ldy#1
-tplp: lda buffer,X
+tplp: 		lda buffer,X
 			cmp#13
 			beq tprret
 			cmp#@"\"".charAt(0)
