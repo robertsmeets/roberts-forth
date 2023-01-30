@@ -2335,8 +2335,8 @@ dad: lda#ad
 			jmp put
 defdrop: .byte 4
 			 .text "DROP"
-			 .byte <defhexdump
-			 .byte >defhexdump
+			 .byte <defword
+			 .byte >defword
 drop: lda depth
 			beq serj
 			dec depth
@@ -2366,6 +2366,20 @@ rp: pla
 			tya
 			pha
 			rts
+defword: .byte 4
+			 .text "WORD"
+			 .byte <defhexdump
+			 .byte >defhexdump
+/* WORD           char -- addr                  181
+     Receive  characters  from the input stream until the  non-zero
+     delimiting  character  is encountered or the input  stream  is
+     exhausted,  ignoring leading delimiters.   The characters  are
+     stored  as  a  packed string with the character count  in  the
+     first  character position.   The actual delimiter  encountered
+     (char  or  null)  is stored at the end of  the  text  but  not
+     included  in the count.   If the input stream was exhausted as
+     WORD is called,  then a zero length will result.   The address
+     of the beginning of this packed string is left on the stack. */
 word: jsr dropit
 			lda ad
 			pha
@@ -2433,3 +2447,4 @@ hpuntout: cmp#10
 			 jmp oswrch
 hpuntadd: adc#'0'
 			jmp oswrch
+
