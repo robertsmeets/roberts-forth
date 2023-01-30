@@ -598,8 +598,8 @@ literal: 	lda#$20		// a literal was found. Add "jsr lit" to the code
 			jmp komma		// add the literal to the code (2 bytes)
 deflit: .byte 3
 			.text "LIT"
-			.byte <definterpret
-			.byte >definterpret
+			.byte <deffind
+			.byte >deffind
 lit:		pla			// compiled code for literal
 			clc			// grab 2 bytes after the PC and put it on the stack
 			adc#1		// get the PC by retrieving it from the return stack with pla
@@ -710,6 +710,12 @@ allot2: lda#2
 			rts
 nigetal:	jmp werror
 doewe:		jmp (ad)
+deffind: .byte 4
+			.text "FIND"
+			.byte <definterpret
+			.byte >definterpret
+			jsr findit              // find the word, and put the address on the stack
+			jmp put
 findit:		jsr skips            // find a word that is pointed to by buffer+intib. Skip spaces
 			ldy intib            // current offset in the buffer
 			lda buffer,Y         // grab a char
@@ -1626,8 +1632,8 @@ punt: jsr dropit
 			jmp upuntwrm
 defdecimal: .byte 7
 			 .text "DECIMAL"
-			 .byte <defdp
-			 .byte >defdp
+			 .byte <deferv
+			 .byte >deferv
 decimal: lda#10
 bazep: sta base
 			lda#0
@@ -1652,6 +1658,10 @@ brkla:		sty ad
 			jsr brkin
 			jmp abort
 brkin:		jmp (ervek)
+deferv: 	.byte 5
+			.text "ERVEK"
+			.byte <defdp
+			.byte >defdp
 erv:		lda#<ervek
 			sta ad
 			lda#>ervek
