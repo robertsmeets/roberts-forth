@@ -1880,11 +1880,12 @@ hcompile:	jsr findit
 			lda#$20
 			jsr czet		
 			jmp komma
-defcompile: .byte 7
+defcompile: .byte $87
 			.text "COMPILE"
 			.byte <defsave
 			.byte >defsave
 compile:	jsr findit
+			jsr put
 			lda#$20
 			jsr czet
 			lda#<compcode
