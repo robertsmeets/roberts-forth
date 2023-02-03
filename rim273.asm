@@ -146,8 +146,8 @@ dropit:		lda depth           // drop the top of the stack, and retain the value 
 serr: jmp serror
 defrat: .byte 2
 			 .text "R@"
-			 .byte <defj
-			 .byte >defj
+			 .byte <defi
+			 .byte >defi
 rat: tsx
 			txa
 			clc
@@ -159,6 +159,10 @@ rat: tsx
 			lda$100,X
 			sta ad
 			jmp put
+defi: .byte 1
+			 .text "I"
+			 .byte <defj
+			 .byte >defj
 rrat: tsx
 			txa
 			clc
@@ -1172,8 +1176,8 @@ ukl: jsr droptw
 			bcs falselab
 defimmediate: .byte 9
 			 .text "IMMEDIATE"
-			 .byte <deftype
-			 .byte >deftype
+			 .byte <deftprint
+			 .byte >deftprint
 immediate: lda lwoord
 			sta ad
 			lda lwoord+1
@@ -1207,6 +1211,10 @@ stprret:	sta (here),Y
 			sty ad
 			jsr msb0
 			jmp alloti
+deftprint: .byte $82
+			 .text @".\""
+			 .byte <deftype
+			 .byte >deftype
 tprint: lda state
 			beq tprdoe
 			lda#$20
