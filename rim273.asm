@@ -2388,7 +2388,7 @@ word: jsr dropit
 			pla
 			sta ad
 			ldx intib
-worlp:		lda buffer
+worlp:		lda buffer,X
 			cmp#13
 			beq worret
 			cmp ad
