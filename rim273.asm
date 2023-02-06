@@ -166,7 +166,7 @@ defi: .byte 1
 rrat: tsx
 			txa
 			clc
-			adc#6
+			adc#4
 			tax
 			lda$100,X
 			sta ad+1
