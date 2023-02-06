@@ -161,12 +161,27 @@ rat: tsx
 			jmp put
 defi: .byte 1
 			 .text "I"
-			 .byte <defj
-			 .byte >defj
-rrat: tsx
+			 .byte <defrrat
+			 .byte >defrrat 
+i: tsx
 			txa
 			clc
 			adc#4
+			tax
+			lda$100,X
+			sta ad+1
+			dex
+			lda$100,X
+			sta ad
+			jmp put
+defrrat: .byte 3
+			 .text "RR@"
+			 .byte <defj
+			 .byte >defj	 
+rrat: tsx
+			txa
+			clc
+			adc#6
 			tax
 			lda$100,X
 			sta ad+1
