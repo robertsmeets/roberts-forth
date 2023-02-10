@@ -2069,28 +2069,96 @@ defdrie: .byte 1
 drie: lda#3
 			bne mbput
 deelo:		jsr droptw
-			// check for negative divisor
-			lda#0
+			lda ad+1
+			bpl dpos
+			lda #1
+			sta ad+6      //  store 1 for negative in ad+6
+			lda ad
+			eor #$FF
+			sta ad
+			lda ad+1
+			eor #$FF
+			sta ad+1
+			lda ad
+			clc
+			adc #1
+			sta ad
+			lda ad+1
+			adc #0
+			sta ad+1
+			jmp dpass
+dpos:		lda #0
+			sta ad+6      // store 0 for positive in ad+6
+dpass:		lda ad+3
+			bpl dpos2
+			lda #1
+			sta ad+7      // store 1 for negative in ad+7
+			lda ad+2
+			eor #$FF
+			sta ad+2
+			lda ad+3
+			eor #$FF
+			sta ad+3
+			lda ad+2
+			clc
+			adc #1
+			sta ad+2
+			lda ad+3
+			adc #0
+			sta ad+3
+			jmp dpass2
+dpos2:		lda #0
+			sta ad+7      // store 0 for positive in ad+7
+dpass2:		lda#0
 			sta ad+4
 			sta ad+5
-			ldx#16
-dlnext: asl ad
-			rol ad+1
-			rol ad+4
+			ldx#16        // step through this loop 16 times
+dlnext:		asl ad        // ad and ad+1 contains the dividend
+			rol ad+1      // ad+2 and ad+3 contain the divisor
+			rol ad+4      // ad+4 and ad+5 contain the modulo
 			rol ad+5
-			lda ad+4
+			lda ad+4      // try to subtract ad+2,3 from ad+4,5
 			sec
 			sbc ad+2
 			tay
 			lda ad+5
 			sbc ad+3
-			bcc dldone
-			inc ad
+			bcc dldone    // if the result is negative, no subtraction is done and the loop starts again
+			inc ad        // positive result. Store in ad+4,5 and increment ad
 			sty ad+4
 			sta ad+5
-dldone: dex
+dldone:		dex
 			bne dlnext
-			rts
+			lda ad+6
+			eor ad+7
+			beq dlrts
+			lda ad     // negate again
+			eor #$FF
+			sta ad
+			lda ad+1
+			eor #$FF
+			sta ad+1
+			lda ad+2
+			eor #$FF
+			sta ad+2
+			lda ad+3
+			eor #$FF
+			sta ad+3
+			sec
+			lda ad
+            adc #0
+			sta ad
+			lda ad+1
+			adc #0
+			sta ad+1
+			sec
+			lda ad+2
+			adc #0
+			sta ad+2
+			lda ad+3
+			adc #0
+			sta ad+3
+dlrts:		rts
 defdeel: .byte 1
 			 .text "/"
 			 .byte <defmod
