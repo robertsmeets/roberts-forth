@@ -2132,18 +2132,12 @@ dldone:		dex
 			lda ad+6
 			eor ad+7
 			beq dlrts
-			lda ad     // negate again
+			lda ad     // one of the flags is 1. negate again
 			eor #$FF
 			sta ad
 			lda ad+1
 			eor #$FF
 			sta ad+1
-			lda ad+2
-			eor #$FF
-			sta ad+2
-			lda ad+3
-			eor #$FF
-			sta ad+3
 			sec
 			lda ad
             adc #0
@@ -2151,13 +2145,19 @@ dldone:		dex
 			lda ad+1
 			adc #0
 			sta ad+1
+			lda ad+4
+			eor #$FF
+			sta ad+4
+			lda ad+5
+			eor #$FF
+			sta ad+5
 			sec
-			lda ad+2
+			lda ad+4
+            adc #0
+			sta ad+4
+			lda ad+5
 			adc #0
-			sta ad+2
-			lda ad+3
-			adc #0
-			sta ad+3
+			sta ad+5
 dlrts:		rts
 defdeel: .byte 1
 			 .text "/"
