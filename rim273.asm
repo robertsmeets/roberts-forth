@@ -2220,8 +2220,8 @@ bra: pla
 			rts
 defcall: .byte 4
 			 .text "CALL"
-			 .byte <deftweemaal
-			 .byte >deftweemaal
+			 .byte <defpad
+			 .byte >defpad
 call: jsr droptw
 			lda ad
 			pha
@@ -2244,6 +2244,10 @@ osc: jsr dropit
 			ldx ad
 			ldy ad+1
 			jmp oscli
+defpad: .byte 3
+			 .text "PAD"
+			 .byte <deftweemaal
+			 .byte >deftweemaal
 padad: lda#<pad
 			sta ad
 			lda#>pad
