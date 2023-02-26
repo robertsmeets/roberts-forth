@@ -1943,32 +1943,32 @@ defsave: .byte 4
 			 .text "SAVE"
 			 .byte <defrot
 			 .byte >defrot
-save: lda#<buffer
+save:		lda#<buffer
 			clc
 			adc intib
 			sta pad
 			lda#>buffer
 			adc#0
-			sta pad+1
+			sta pad+1           // pad and pad+1 point to the target filename
 			lda#$FF
 			sta pad+4
 			sta pad+5
 			sta pad+8
 			sta pad+9
-			sta pad+12
-			sta pad+13
-			sta pad+16
-			sta pad+17
+			sta pad+$C
+			sta pad+$D
+			sta pad+$10
+			sta pad+$11
 			lda#0
-			sta pad+2
-			sta pad+6
-			sta pad+10
+			sta pad+2            // pad+2,3,4,5 contain the load address $FFFF8000
+			sta pad+6            // pad+6,7,8,9 contain the execuation address $FFFF8000
+			sta pad+$A           // pad+$A,$B,$C,$d contain the start address $FFFF8000
 			lda#$80
 			sta pad+3
 			sta pad+7
-			sta pad+11
+			sta pad+$B
 			lda here
-			sta pad+$E
+			sta pad+$E            // pad+$E,$F,$10,$11 contain end address: here (top 16 bits all set: $FFFFhhhh)
 			sta herstor
 			lda here+1
 			sta pad+$F
@@ -1978,8 +1978,8 @@ save: lda#<buffer
 			lda lwoord+1
 			sta lstor+1
 			jsr normsk
-			lda#0
-			ldx#<pad
+			lda#0                // function code 0, meaning SAVE
+			ldx#<pad             // x and y point to pad, which contains the control block for OSFILE
 			ldy#>pad
 			jmp osfile
 starld:		jsr init
