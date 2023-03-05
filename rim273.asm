@@ -11,7 +11,6 @@
 			.const osbyte=$FFF4
 			.const oscli=$FFF7
 			.const ad=$70
-			.const herstor=$1900
 			.const seed=ad+10               // seed for the random generator
 			.const here=ad+15               // location of the first byte of free memory
 			.const lwoord=ad+17             // lwoord contains the first word, used to traverse the linked list of words
@@ -20,7 +19,6 @@
 			.const state=ad+23              // state = 0 when interpreting, 1 when compiling a word
 			.const base=ad+25               // numeric base for printing. i.e. 10 for decimal, 16 for hex
 			.const ervek=ad+27              // location of error handling
-			.const lstor=ad+29
 			.const stack=0
 			.const buffer=$500              // typed in text ends up here
 			.const pad=$400
@@ -73,6 +71,10 @@ unniet:			pla
 			pla
 			plp
 			rts
+herstor:	.byte <romhwm
+			.byte >romhwm
+lstor:		.byte <defspc
+			.byte >defspc
 unreco:			ldx #0
 unrlp:			lda ($F2),y
 			cmp#'.'
@@ -874,7 +876,7 @@ init:		lda#<brkk
 			sta brkv
 			lda#>brkk
 			sta brkv+1
-			lda#<type
+			lda#<type 
 			sta ervek
 			lda#>type
 			sta ervek+1
@@ -882,7 +884,7 @@ init:		lda#<brkk
 			sta lwoord
 			lda #>defspc
 			sta lwoord+1
-			jsr ram
+			jsr rom
 			lda#0
 			sta state
 			sta state+1
@@ -896,16 +898,29 @@ defrom:		.byte 3
 			.text "ROM"
 			.byte <defram
 			.byte >defram
-rom:			lda <herstor
+rom:		lda #'R'
+			jsr oswrch
+			lda #<herstor
+			sta ad
+			lda #>herstor
+			sta ad+1
+			jsr hexdumpi
+			lda herstor
 			sta here
-			lda >herstor
+			lda herstor+1
 			sta here+1
+			lda lstor
+			sta lwoord
+			lda lstor+1
+			sta lwoord+1
 			rts
 defram:		.byte 3
 			.text "RAM"
 			.byte <defabort
 			.byte >defabort
-ram:		lda#131
+ram:		lda #'x'
+			jsr oswrch
+			lda#131
 			jsr osbyte
 			stx here
 			sty here+1
@@ -1941,9 +1956,10 @@ compcode: lda#$20
 			rts
 defsave: .byte 4
 			 .text "SAVE"
-			 .byte <defrot
-			 .byte >defrot
-save:		lda#<buffer
+			 .byte <defsaveready
+			 .byte >defsaveready
+save:		jsr saveready
+			lda#<buffer
 			clc
 			adc intib
 			sta pad
@@ -1969,15 +1985,14 @@ save:		lda#<buffer
 			sta pad+$B
 			lda here
 			sta pad+$E            // pad+$E,$F,$10,$11 contain end address: here (top 16 bits all set: $FFFFhhhh)
-			sta herstor
 			lda here+1
 			sta pad+$F
-			sta herstor+1
-			lda lwoord
-			sta lstor
-			lda lwoord+1
-			sta lstor+1
 			jsr normsk
+			lda #<pad
+			sta ad
+			lda #>pad
+			sta ad+1
+			jsr hexdumpi
 			lda#0                // function code 0, meaning SAVE
 			ldx#<pad             // x and y point to pad, which contains the control block for OSFILE
 			ldy#>pad
@@ -1999,6 +2014,26 @@ starld:		jsr init
 			lda ad+1
 			sta ad+4
 			jmp execute
+defsaveready: .byte 9
+			 .text "SAVEREADY"
+			 .byte <defrot
+			 .byte >defrot
+saveready:	lda #'X'
+            jsr oswrch
+			lda here            // save HERE and LWOORD in herstor and lstor as preparation for save
+			sta herstor
+			lda here+1
+			sta herstor+1
+			lda lwoord
+			sta lstor
+			lda lwoord+1
+			sta lstor+1
+			lda #<herstor
+			sta ad
+			lda #>herstor
+			sta ad+1
+			jsr hexdumpi
+			rts
 defrot: .byte 3
 			 .text "ROT"
 			 .byte <defleave
@@ -2520,7 +2555,7 @@ defhexdump: .byte 7                // print a hexdump starting with the address
 			.byte 0
 			.byte 0
 hexdump: 	jsr dropit
-			ldy#0
+hexdumpi:	ldy#0
 hloop:		lda (ad),Y
 			tax
 			and #$f0                // grab the higher nibble
@@ -2543,4 +2578,6 @@ hpuntout: cmp#10
 			 jmp oswrch
 hpuntadd: adc#'0'
 			jmp oswrch
+romhwm:
+
 
