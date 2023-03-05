@@ -898,13 +898,10 @@ defrom:		.byte 3
 			.text "ROM"
 			.byte <defram
 			.byte >defram
-rom:		lda #'R'
-			jsr oswrch
-			lda #<herstor
+rom:		lda #<herstor
 			sta ad
 			lda #>herstor
 			sta ad+1
-			jsr hexdumpi
 			lda herstor
 			sta here
 			lda herstor+1
@@ -918,9 +915,7 @@ defram:		.byte 3
 			.text "RAM"
 			.byte <defabort
 			.byte >defabort
-ram:		lda #'x'
-			jsr oswrch
-			lda#131
+ram:		lda#131
 			jsr osbyte
 			stx here
 			sty here+1
@@ -1988,11 +1983,6 @@ save:		jsr saveready
 			lda here+1
 			sta pad+$F
 			jsr normsk
-			lda #<pad
-			sta ad
-			lda #>pad
-			sta ad+1
-			jsr hexdumpi
 			lda#0                // function code 0, meaning SAVE
 			ldx#<pad             // x and y point to pad, which contains the control block for OSFILE
 			ldy#>pad
@@ -2018,9 +2008,7 @@ defsaveready: .byte 9
 			 .text "SAVEREADY"
 			 .byte <defrot
 			 .byte >defrot
-saveready:	lda #'X'
-            jsr oswrch
-			lda here            // save HERE and LWOORD in herstor and lstor as preparation for save
+saveready:	lda here            // save HERE and LWOORD in herstor and lstor as preparation for save
 			sta herstor
 			lda here+1
 			sta herstor+1
@@ -2028,11 +2016,6 @@ saveready:	lda #'X'
 			sta lstor
 			lda lwoord+1
 			sta lstor+1
-			lda #<herstor
-			sta ad
-			lda #>herstor
-			sta ad+1
-			jsr hexdumpi
 			rts
 defrot: .byte 3
 			 .text "ROT"
