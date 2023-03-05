@@ -1972,15 +1972,17 @@ save:		jsr saveready
 			sta pad+$11
 			lda#0
 			sta pad+2            // pad+2,3,4,5 contain the load address $FFFF8000
-			sta pad+6            // pad+6,7,8,9 contain the execuation address $FFFF8000
-			sta pad+$A           // pad+$A,$B,$C,$d contain the start address $FFFF8000
-			lda#$80
+			sta pad+6            // pad+6,7,8,9 contain the execution address $FFFF8000
+			sta pad+$A           // pad+$A,$B,$C,$d contain the start address $FFFF1900
+			lda#$80				 
 			sta pad+3
 			sta pad+7
+			lda #$19              // this assumes the ROM contents have been moved to 1900
 			sta pad+$B
 			lda here
 			sta pad+$E            // pad+$E,$F,$10,$11 contain end address: here (top 16 bits all set: $FFFFhhhh)
 			lda here+1
+			sbc #($80 - $19)
 			sta pad+$F
 			jsr normsk
 			lda#0                // function code 0, meaning SAVE
