@@ -881,9 +881,7 @@ definit:	.byte 4
 			.text "INIT"
 			.byte <defrom
 			.byte >defrom
-init:		lda#'I'
-            jsr oswrch
-			lda#<brkk
+init:		lda#<brkk
 			sta brkv
 			lda#>brkk
 			sta brkv+1
@@ -905,9 +903,7 @@ defrom:		.byte 3
 			.text "ROM"
 			.byte <defram
 			.byte >defram
-rom:		lda #'R'
-            jsr oswrch
-			lda herstor
+rom:		lda herstor
 			sta here
 			lda herstor+1
 			sta here+1
@@ -915,9 +911,6 @@ rom:		lda #'R'
 			sta lwoord
 			lda lstor+1
 			sta lwoord+1
-			lda #'R'
-			jsr oswrch
-		jsr debugprint
 			rts
 defram:		.byte 3
 			.text "RAM"
@@ -1993,61 +1986,10 @@ save:		jsr saveready
 			sbc #($80 - $19 -1)
 			sta pad+$F
 			jsr normsk
-			lda #'S'              // print S and the contents of here
-			jsr oswrch
-			jsr debugprint
 			lda#0                // function code 0, meaning SAVE
 			ldx#<pad             // x and y point to pad, which contains the control block for OSFILE
 			ldy#>pad
 			jmp osfile
-debugprint: lda #'H'
-            jsr oswrch
-            lda #<here
-			sta ad
-			lda #>here
-			sta ad+1
-			jsr hexdumpi
-			
-			lda #'h'
-            jsr oswrch
-            lda #<herstor
-			sta ad
-			lda #>herstor
-			sta ad+1
-			jsr hexdumpi
-			
-			lda #'L'
-            jsr oswrch
-            lda #<lwoord
-			sta ad
-			lda #>lwoord
-			sta ad+1
-			jsr hexdumpi
-			
-			lda #'l'
-            jsr oswrch
-            lda #<lstor
-			sta ad
-			lda #>lstor
-			sta ad+1
-			jmp hexdumpi
-starld:		jsr init
-			lda herstor
-			sta here
-			lda herstor+1
-			sta here+1
-			lda lstor
-			sta lwoord
-			sta ad+3
-			lda lstor+1
-			sta lwoord+1
-			sta ad+4
-			jsr toexec
-			lda ad
-			sta ad+3
-			lda ad+1
-			sta ad+4
-			jmp execute
 defsaveready: .byte 9
 			 .text "SAVEREADY"
 			 .byte <defrot
