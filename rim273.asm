@@ -404,11 +404,21 @@ plus: jsr droptw
 			jmp put
 defher: .byte 4
 			 .text "HERE"
-			 .byte <defallot
-			 .byte >defallot
+			 .byte <deflwoord
+			 .byte >deflwoord
 her: lda here
 			sta ad
 			lda here+1
+			sta ad+1
+			jmp put
+			
+deflwoord: .byte 6
+			 .text "LWOORD"
+			 .byte <defallot
+			 .byte >defallot
+			lda lwoord
+			sta ad
+			lda lwoord+1
 			sta ad+1
 			jmp put
 defallot: .byte 5
@@ -857,8 +867,7 @@ comr:			rts
 //
 // language entry
 //
-langen:
-			cmp#1
+langen:		cmp#1
             beq startlab
 			rts
 defstart:	.byte 5
@@ -872,7 +881,9 @@ definit:	.byte 4
 			.text "INIT"
 			.byte <defrom
 			.byte >defrom
-init:		lda#<brkk
+init:		lda#'I'
+            jsr oswrch
+			lda#<brkk
 			sta brkv
 			lda#>brkk
 			sta brkv+1
@@ -880,10 +891,6 @@ init:		lda#<brkk
 			sta ervek
 			lda#>type
 			sta ervek+1
-			lda#<defspc
-			sta lwoord
-			lda #>defspc
-			sta lwoord+1
 			jsr rom
 			lda#0
 			sta state
@@ -898,10 +905,8 @@ defrom:		.byte 3
 			.text "ROM"
 			.byte <defram
 			.byte >defram
-rom:		lda #<herstor
-			sta ad
-			lda #>herstor
-			sta ad+1
+rom:		lda #'R'
+            jsr oswrch
 			lda herstor
 			sta here
 			lda herstor+1
@@ -910,6 +915,9 @@ rom:		lda #<herstor
 			sta lwoord
 			lda lstor+1
 			sta lwoord+1
+			lda #'R'
+			jsr oswrch
+		jsr debugprint
 			rts
 defram:		.byte 3
 			.text "RAM"
@@ -924,7 +932,7 @@ toev:		lda#126
 			jsr osbyte
 etxt:		.byte 0
 			.byte$11
-			.text"Escape"
+			.text "Escape"
 			.byte 0
 defabort:	.byte 5
 			.text "ABORT"
@@ -1982,13 +1990,47 @@ save:		jsr saveready
 			lda here
 			sta pad+$E            // pad+$E,$F,$10,$11 contain end address: here (top 16 bits all set: $FFFFhhhh)
 			lda here+1
-			sbc #($80 - $19)
+			sbc #($80 - $19 -1)
 			sta pad+$F
 			jsr normsk
+			lda #'S'              // print S and the contents of here
+			jsr oswrch
+			jsr debugprint
 			lda#0                // function code 0, meaning SAVE
 			ldx#<pad             // x and y point to pad, which contains the control block for OSFILE
 			ldy#>pad
 			jmp osfile
+debugprint: lda #'H'
+            jsr oswrch
+            lda #<here
+			sta ad
+			lda #>here
+			sta ad+1
+			jsr hexdumpi
+			
+			lda #'h'
+            jsr oswrch
+            lda #<herstor
+			sta ad
+			lda #>herstor
+			sta ad+1
+			jsr hexdumpi
+			
+			lda #'L'
+            jsr oswrch
+            lda #<lwoord
+			sta ad
+			lda #>lwoord
+			sta ad+1
+			jsr hexdumpi
+			
+			lda #'l'
+            jsr oswrch
+            lda #<lstor
+			sta ad
+			lda #>lstor
+			sta ad+1
+			jmp hexdumpi
 starld:		jsr init
 			lda herstor
 			sta here
@@ -2541,7 +2583,7 @@ defhexdump: .byte 7                // print a hexdump starting with the address
 			.byte 0
 hexdump: 	jsr dropit
 hexdumpi:	ldy#0
-hloop:		lda (ad),Y
+hexloop:	lda (ad),Y
 			tax
 			and #$f0                // grab the higher nibble
 			lsr
@@ -2555,7 +2597,11 @@ hloop:		lda (ad),Y
 			jsr spc
 			iny
 			cpy #17
-			bne hloop
+			bne hexloop
+			lda #$D
+			jsr oswrch
+			lda #$A
+			jsr oswrch
 			rts
 hpuntout: cmp#10
 			bcc hpuntadd      // less than 10
@@ -2564,5 +2610,3 @@ hpuntout: cmp#10
 hpuntadd: adc#'0'
 			jmp oswrch
 romhwm:
-
-
