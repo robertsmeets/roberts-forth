@@ -1,16 +1,39 @@
 //----------------------------------------------------------
-			* = $8000 "Robert's Forth"		// The name will appear in the memory map when assembling
+#if BBC
+ .print "Target = BBC"
+ * = $8000 "Robert's Forth"		// The name will appear in the memory map when assembling
+ .const osrdch=$FFE0
+ .const oswrch=$FFEE
+			.const ad=$70
+			.const osnewl=$FFE7
+			.const osfile=$FFDD
+			.const osbyte=$FFF4
+			.const oscli=$FFF7
+			.const buffer=$500              // typed in text ends up here
+			.const pad=$400
+			.const brkv=$202
+#endif
+
+#if C64
+		.print "Target = C64"
+BasicUpstart2(startlab)
+		.const osrdch=$FFCF
+		.const oswrch=$FFD2
+			.const osfile=0 // these routines don't exist on C64 and need to be replaced with custom routines
+			.const osbyte=0
+			.const oscli=0
+		.const ad=$02
+		.const buffer=$9f00            // typed in text ends up here
+			.const pad=$9e00
+.const brkv=$9cfe
+osnewl:    lda #$D
+			jsr oswrch
+			lda #$A
+			jmp oswrch
+#endif
 			.encoding "ascii"               // needed, otherwise another charset will be used
 			.const VS="2.73"
 			.const maxlen=80
-			.const brkv=$202
-			.const osfile=$FFDD
-			.const osnewl=$FFE7
-			.const osrdch=$FFE0
-			.const oswrch=$FFEE
-			.const osbyte=$FFF4
-			.const oscli=$FFF7
-			.const ad=$70
 			.const seed=ad+10               // seed for the random generator
 			.const here=ad+15               // location of the first byte of free memory
 			.const lwoord=ad+17             // lwoord contains the first word, used to traverse the linked list of words
@@ -20,8 +43,7 @@
 			.const base=ad+25               // numeric base for printing. i.e. 10 for decimal, 16 for hex
 			.const ervek=ad+27              // location of error handling
 			.const stack=0
-			.const buffer=$500              // typed in text ends up here
-			.const pad=$400
+#if BBC
 start:			jmp langen
 			jmp serven
 //ROM type byte:
@@ -42,13 +64,17 @@ start:			jmp langen
 			.byte %11000010
 			.byte cop-$8000
 			.byte 273 // Binaire versie
+#endif
 rtxt:		.text "Robert's Forth"
 			.byte 0
+#if BBC
 			.text "Versie "+VS
 cop:		.byte 0
 			.text "(C)"
 			.text " 1988 Robert Smeets"
 			.byte 0
+#endif
+
 //
 // service entry
 //
@@ -932,7 +958,7 @@ defabort:	.byte 5
 			.byte <defquit
 			.byte >defquit
 abort:		jsr spp
-			lda status
+			lda state
 			beq qlp
 			jsr status
 			jmp qlp
