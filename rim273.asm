@@ -17,7 +17,8 @@
 #if C64
 		.print "Target = C64"
 BasicUpstart2(startlab)
-		.const osrdch=$FFCF
+		// .const osrdch=$FFCF     - CHRIN
+		.const osrdch=$FFE4           // GETIN
 		.const oswrch=$FFD2
 			.const osfile=0 // these routines don't exist on C64 and need to be replaced with custom routines
 			.const osbyte=0
@@ -465,15 +466,15 @@ defquery: .byte 5
 			 .byte <defmode
 			 .byte >defmode
 query:		lda#maxlen
-			sta ad+2
+			sta ad+2    // ad+2,3 contain the maximum amount of characters to read
 			lda#0
-			sta ad+3
+			sta ad+3     
 			lda#<buffer
 			sta ad
 			lda#>buffer
-			sta ad+1
-			jmp exwrm
-tib:		lda#<buffer
+			sta ad+1     // ad, ad+1 contain the buffer address
+			jmp exwrm    // jump to EXPECT
+tib:		lda#<buffer // put the address of buffer onto the stack
 			sta ad
 			lda#>buffer
 			sta ad+1
@@ -483,8 +484,7 @@ status: 	jsr spc     // prints out OK
 			jsr oswrch
 			lda#'K'
 			jmp oswrch
-defmode: .byte 4
-			.text "MODE"
+defmode:			.text "MODE"
 			.byte <defwords
 			.byte >defwords
 mode:		jsr dropit  // switch screen mode
@@ -1432,6 +1432,16 @@ defexpect: .byte 6
 			 .text "EXPECT"
 			 .byte <defkomma
 			 .byte >defkomma
+//		  EXPECT       addr +n --                    M,83
+//           Receive characters and store each into memory.  The transfer
+//           begins at addr proceeding towards higher addresses one byte
+//           per character until either a "return" is received or until
+//           +n characters have been transferred.  No more than +n
+//           characters will be stored.  The "return" is not stored into
+//           memory.  No characters are received or transferred if +n is
+//           zero.  All characters actually received and stored into
+//           memory will be displayed, with the "return" displaying as a
+//           space.
 expect: jsr droptw
 exwrm: lda ad
 			sta ad+4
@@ -1449,6 +1459,7 @@ exloop: lda ad
 			cmp ad+3
 			bne exhup
 exrt: jmp exrut
+#if BBC
 exhup:
 			lda#0
 			sta intib
@@ -1460,9 +1471,9 @@ exhup:
 			cmp#127     // delete?
 			beq exdel
 			jsr oswrch
-			cmp#32		// space?
+			cmp#32		// less than 32? Special character, ignore
 			bcc exloop
-			cmp#128
+			cmp#128     // 128 or more? Special character, ignore
 			bcs exloop
 			ldy#0
 			sta (ad),Y
@@ -1496,6 +1507,32 @@ exdoedel:		sec
 			lda#127
 			jsr oswrch
 			jmp exloop
+#endif
+#if C64
+exhup:
+			lda#0
+			sta intib
+			jsr osrdch	// read a character
+			cmp #13
+			beq exret
+			ldy#0
+			sta (ad),Y
+			lda #'M'
+			jsr oswrch
+			lda#1
+			clc
+			adc ad
+			sta ad
+			lda#0
+			adc ad+1
+			sta ad+1
+			jmp exloop
+exret: jsr spc
+exrut: ldy#0
+			lda#13
+			sta (ad),Y
+			rts
+#endif
 defkomma: .byte 1
 			 .text ","
 			 .byte <defckomma
