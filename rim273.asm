@@ -555,7 +555,6 @@ vindz:		lda ad+3
 vook:		ldy#0
 			lda (ad+3),Y
 			and #$7F
-			jsr oswrch
 			cmp ad+2
 			beq voegel
 voet: tay
@@ -570,8 +569,7 @@ voet: tay
 			jmp vindz
 voegel: ldy#0
 voezz:			lda (ad),Y
-            jsr oswrch
-			iny
+            iny
 			cmp (ad+3),Y
 			bne voeni
 			cpy ad+2
@@ -1472,11 +1470,11 @@ exhup:
 			beq exesc
 			cmp#127     // delete?
 			beq exdel
-			jsr oswrch
 			cmp#32		// less than 32? Special character, ignore
 			bcc exloop
 			cmp#128     // 128 or more? Special character, ignore
 			bcs exloop
+			jsr oswrch
 			ldy#0
 			sta (ad),Y
 			lda#1
