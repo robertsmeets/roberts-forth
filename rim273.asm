@@ -17,7 +17,6 @@
 #if C64
 		.print "Target = C64"
 BasicUpstart2(startlab)
-		// .const osrdch=$FFCF     - CHRIN
 		.const osrdch=$FFE4           // GETIN
 		.const oswrch=$FFD2
 			.const osfile=0 // these routines don't exist on C64 and need to be replaced with custom routines
@@ -484,7 +483,8 @@ status: 	jsr spc     // prints out OK
 			jsr oswrch
 			lda#'K'
 			jmp oswrch
-defmode:			.text "MODE"
+defmode:	.byte 4
+			.text "MODE"
 			.byte <defwords
 			.byte >defwords
 mode:		jsr dropit  // switch screen mode
@@ -555,6 +555,7 @@ vindz:		lda ad+3
 vook:		ldy#0
 			lda (ad+3),Y
 			and #$7F
+			jsr oswrch
 			cmp ad+2
 			beq voegel
 voet: tay
@@ -569,6 +570,7 @@ voet: tay
 			jmp vindz
 voegel: ldy#0
 voezz:			lda (ad),Y
+            jsr oswrch
 			iny
 			cmp (ad+3),Y
 			bne voeni
@@ -1515,9 +1517,10 @@ exhup:
 			jsr osrdch	// read a character
 			cmp #13
 			beq exret
-			ldy#0
+			cmp #0
+			beq exhup
+			ldy #0
 			sta (ad),Y
-			lda #'M'
 			jsr oswrch
 			lda#1
 			clc
