@@ -48,7 +48,7 @@ osnewl:     lda #$D
             .const ervek=ad+27              // location of error handling
             .const stack=0
 #if BBC
-start:            jmp langen
+start:      jmp langen
             jmp serven
 //ROM type byte:
 //
@@ -467,9 +467,7 @@ defquery:   .byte 5
             .text "QUERY"
             .byte <defmode
             .byte >defmode
-query:      lda #'Q'
-            jsr oswrch
-            lda#maxlen
+query:      lda#maxlen
             sta ad+2    // ad+2,3 contain the maximum amount of characters to read
             lda#0
             sta ad+3     
@@ -545,11 +543,11 @@ wook:       lda#1
             pla
             sta ad+5
             jmp wordz
-vind:       lda lwoord
-            sta ad+3
+vind:       lda lwoord          // load lwoord, address of the first word and 
+            sta ad+3            // store it in ad+3, ad+4
             lda lwoord+1
             sta ad+4
-vindz:      lda ad+3
+vindz:      lda ad+3            // if ad+3, ad+4 are zero, the end of the words is reached
             bne vook
             lda ad+4
             bne vook
@@ -557,10 +555,10 @@ vindz:      lda ad+3
             sta ad
             sta ad+1
             rts
-vook:       lda #'V'
-            jsr oswrch
-            ldy #0
-            lda (ad+3),Y // grab first letter of word in vocabulary
+vook:       ldy #0       // ad, ad+1 contain the address of a word from the input
+                         // ad+2 contains the length of the word
+						 // ad+3, ad+4 contain the address of the next word in the word list
+            lda (ad+3),Y // grab length of word in vocabulary
             and #$7F     // blank out the top bit
             cmp ad+2     // compare against the length of the word
             beq voegel
@@ -574,7 +572,7 @@ voet:       tay          // increment y and go to word!? for comparision
             pla
             sta ad+3
             jmp vindz
-voegel:     ldy#0                // length is good
+voegel:     ldy #0               // length is good
 voezz:      lda (ad),Y           // compare the word pointed to by ad, ad+1 with the word pointed to by
             iny                  // ad+3, ad+4
             cmp (ad+3),Y
@@ -586,9 +584,7 @@ voeni:      ldy#0                // word is not equal
             lda (ad+3),Y
             and#$7F
             jmp voet
-voewat:     lda #'Z'
-            jsr oswrch
-            ldy#0                // found! word is equal!? to the one in the dictionary
+voewat:     ldy#0                // found! word is equal!? to the one in the dictionary
             lda (ad+3),Y
             and#$7F
             clc
@@ -629,7 +625,9 @@ command:    jsr comips      // execute a OS * command with OSCLI
             ldy ad+7
             jmp oscli
 tostcom:    jmp stcom
-doe:        jsr droptw         // find a word and execute it
+doe:        jsr droptw      // find a word and execute it
+                            // ad, ad+1 contain the address of the word
+                            // ad+2, ad+3 contain the length of the word (ad+3 is zero)
             lda ad+2
             sta ad+8
             lda ad
@@ -641,7 +639,7 @@ result:     lda ad
             bne doeiet
             lda ad+1
             bne doeiet
-            ldy#0            // word not found in vocabulary
+            ldy#0           // word not found in vocabulary
             lda (ad+6),Y    // check for OS command starting with *
             cmp#'*'
             beq command
@@ -687,9 +685,9 @@ lit:        pla            // compiled code for literal
             jmp atwrm
 getl:       ldy#0
             lda (ad+6),Y
-            cmp#'-'
+            cmp #'-'
             bne getal
-            lda#1                // negative number preceded by -
+            lda #1                // negative number preceded by -
             clc
             adc ad+6
             sta ad+6
@@ -743,7 +741,7 @@ getend:     lda ad+4
             sta ad+1
             jsr put
             jmp skips
-doeiets: ldy#0
+doeiets:    ldy#0
             lda (ad+3),Y
             and#$80
             bne doewe
@@ -816,34 +814,38 @@ definterpret: .byte 9
             .text "INTERPRET"
             .byte <defforget
             .byte >defforget
-interpret:  lda#0
+interpret:  lda #0
             sta intib
 intp:       jsr skips
             ldy intib
             lda buffer,Y
-            cmp#13
+            cmp #13
             beq inret
             lda intib
             sta ad+2
             clc
-            adc#<buffer
+            adc #<buffer
             sta ad
-            lda#0
-            adc#>buffer
-            sta ad+1
-            jsr put
-            jsr normsk
+            lda #0
+            adc #>buffer
+            sta ad+1      // ad, ad+1 now point to the buffer
+		                  // ALL IS STILL GOOD HERE
+			
+			jsr put       // put the start address of the buffer on the stack
+            
+			
+			jsr normsk    // find the end of the word
             lda intib
             sec
             sbc ad+2
             sta ad
             jsr msb0
-            jsr put
-            jsr skips
-            jsr doe
+            jsr put       // put the length on the stack
+            jsr skips     // skip spaces
+            jsr doe       // execute word
             jmp intp
 inret:      rts
-defforget: .byte 6
+defforget:  .byte 6
             .text "FORGET"
             .byte <defstart
             .byte >defstart
@@ -979,16 +981,13 @@ qlp:        jsr osnewl            // main query/interpret loop
             ldx#255
             txs
             jsr query
-            lda#'-'
+            lda #'-'
             jsr oswrch
-            lda#<buffer
+            lda #<buffer
             sta ad
-            lda#>buffer
+            lda #>buffer
             sta ad+1
-            jsr hexdumpi
             jsr interpret
-            lda#'+'
-            jsr oswrch
             lda state
             bne qlp
             jsr status
@@ -1009,11 +1008,11 @@ qlp:        jsr osnewl            // main query/interpret loop
 // The default routine, whose address is given at the location, prints the fault message.
 // See constant brkv which points to 202
 //
-werrortxt:  .text "Unknown word"
+werrortxt:  .text "UNKNOWN WORD"
             .byte 0
-crerrortxt: .text "Not a good word"
+crerrortxt: .text "NOT A GOOD WORD"
             .byte 0
-serrortxt:  .text"Stack empty"
+serrortxt:  .text"STACK EMPTY"
             .byte 0
 werror:     lda#<werrortxt
             sta ad
@@ -1290,11 +1289,11 @@ stprret:    sta (here),Y
             sty ad
             jsr msb0
             jmp alloti
-deftprint: .byte $82
-             .text @".\""
-             .byte <deftype
-             .byte >deftype
-tprint: lda state
+deftprint:  .byte $82
+            .text @".\""
+            .byte <deftype
+            .byte >deftype
+tprint:     lda state
             beq tprdoe
             lda#$20
             jsr czet
@@ -1306,7 +1305,7 @@ tprint: lda state
             sta ad+2
             ldx intib
             ldy#1
-tplp:         lda buffer,X
+tplp:       lda buffer,X
             cmp#13
             beq tprret
             cmp#@"\"".charAt(0)
@@ -1470,9 +1469,7 @@ defexpect: .byte 6
 //           memory will be displayed, with the "return" displaying as a
 //           space.
 expect:     jsr droptw
-exwrm:      lda #'X'
-            jsr oswrch
-            lda ad             // ad, ad+1   contain the buffer address
+exwrm:      lda ad             // ad, ad+1   contain the buffer address
             sta ad+4           // ad+2, ad+3 contain the max characters to read
             clc
             adc ad+2           // ad+4, ad+5 contain the buffer address (copy of ad, ad+1)
@@ -1715,28 +1712,28 @@ defpunt:    .byte 1
 punt:       jsr dropit
             lda ad+1
             bpl upuntwrm
-            lda#'-'
+            lda #'-'
             jsr oswrch
             lda ad
-            eor#$FF
+            eor #$FF
             clc
-            adc#1
+            adc #1
             sta ad
             lda ad+1
-            eor#$FF
-            adc#0
+            eor #$FF
+            adc #0
             sta ad+1
             jmp upuntwrm
 defdecimal: .byte 7
-             .text "DECIMAL"
-             .byte <deferv
-             .byte >deferv
-decimal: lda#10
-bazep: sta base
+            .text "DECIMAL"
+            .byte <deferv
+            .byte >deferv
+decimal:    lda#10
+bazep:      sta base
             lda#0
             sta base+1
             rts
-brkk:        lda$FD            // target for the break vector, when an error happens
+brkk:       lda$FD            // target for the break vector, when an error happens
             clc
             adc#1
             sta ad
@@ -1745,16 +1742,16 @@ brkk:        lda$FD            // target for the break vector, when an error hap
             sta ad+1
             jsr put
             ldy#0
-brklp:        lda (ad),Y
+brklp:      lda (ad),Y
             beq brkla
             iny
             bne brklp
-brkla:        sty ad
+brkla:      sty ad
             jsr msb0
             jsr put
             jsr brkin
             jmp abort
-brkin:        jmp (ervek)
+brkin:      jmp (ervek)
 deferv:     .byte 5
             .text "ERVEK"
             .byte <defdp
@@ -1972,7 +1969,7 @@ defhcompile: .byte $89
              .text "[COMPILE]"
              .byte <defcompile
              .byte >defcompile
-hcompile:    jsr findit
+hcompile:   jsr findit
             jsr put
             lda#$20
             jsr czet        
