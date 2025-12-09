@@ -557,7 +557,7 @@ vindz:      lda ad+3            // if ad+3, ad+4 are zero, the end of the words 
             rts
 vook:       ldy #0       // ad, ad+1 contain the address of a word from the input
                          // ad+2 contains the length of the word
-						 // ad+3, ad+4 contain the address of the next word in the word list
+                         // ad+3, ad+4 contain the address of the next word in the word list
             lda (ad+3),Y // grab length of word in vocabulary
             and #$7F     // blank out the top bit
             cmp ad+2     // compare against the length of the word
@@ -628,7 +628,8 @@ tostcom:    jmp stcom
 doe:        jsr droptw      // find a word and execute it
                             // ad, ad+1 contain the address of the word
                             // ad+2, ad+3 contain the length of the word (ad+3 is zero)
-            lda ad+2
+            jsr hexdumpi
+			lda ad+2
             sta ad+8
             lda ad
             sta ad+6
@@ -647,20 +648,20 @@ result:     lda ad
             lda state
             bne getcom        
             rts
-getcom: jmp literal
-doeiet: jmp doeiets
+getcom:     jmp literal
+doeiet:     jmp doeiets
 defliteral: .byte 7
             .text "LITERAL"
             .byte <deflit
             .byte >deflit
-literal:     lda#$20        // a literal was found. Add "jsr lit" to the code
+literal:    lda#$20        // a literal was found. Add "jsr lit" to the code
             jsr czet        
             lda#<lit
             jsr czet
             lda#>lit
             jsr czet
             jmp komma        // add the literal to the code (2 bytes)
-deflit: .byte 3
+deflit:     .byte 3
             .text "LIT"
             .byte <deffind
             .byte >deffind
@@ -829,19 +830,25 @@ intp:       jsr skips
             lda #0
             adc #>buffer
             sta ad+1      // ad, ad+1 now point to the buffer
-		                  // ALL IS STILL GOOD HERE
-			
-			jsr put       // put the start address of the buffer on the stack
-            
-			
-			jsr normsk    // find the end of the word
+                          // ALL IS STILL GOOD HERE
+            jsr put       // put the start address of the buffer on the stack
+            jsr normsk    // find the end of the word
+            lda ad        // park ad, ad+1 in ad+6, ad+7
+			sta ad+6
+			lda ad+1
+			sta ad+7
             lda intib
             sec
             sbc ad+2
             sta ad
             jsr msb0
             jsr put       // put the length on the stack
+			lda ad+6      // restore the location of the next wor
+			sta ad
+			lda ad+7
+			sta ad+1
             jsr skips     // skip spaces
+//            jsr printad
             jsr doe       // execute word
             jmp intp
 inret:      rts
@@ -981,8 +988,6 @@ qlp:        jsr osnewl            // main query/interpret loop
             ldx#255
             txs
             jsr query
-            lda #'-'
-            jsr oswrch
             lda #<buffer
             sta ad
             lda #>buffer
@@ -2261,18 +2266,18 @@ vrdup: jsr dropit
             lda ad+1
             bne vrnk
             rts
-vrnk: jmp dup
+vrnk:       jmp dup
 defbranch0: .byte 7
-             .text "0BRANCH"
-             .byte <defcall
-             .byte >defcall
-branch0: jsr dropit
+            .text "0BRANCH"
+            .byte <defcall
+            .byte >defcall
+branch0:    jsr dropit
             lda ad
             bne bra
             lda ad+1
             bne bra
             rts
-bra: pla
+bra:        pla
             clc
             adc#3
             tax
@@ -2282,11 +2287,11 @@ bra: pla
             txa
             pha
             rts
-defcall: .byte 4
-             .text "CALL"
-             .byte <defpad
-             .byte >defpad
-call: jsr droptw
+defcall:    .byte 4
+            .text "CALL"
+            .byte <defpad
+            .byte >defpad
+call:       jsr droptw
             lda ad
             pha
             jsr dropit
@@ -2303,37 +2308,37 @@ call: jsr droptw
             lda#0
             sta ad+1
             jmp put
-calli: jmp (ad+2)
-osc: jsr dropit
+calli:      jmp (ad+2)
+osc:        jsr dropit
             ldx ad
             ldy ad+1
             jmp oscli
-defpad: .byte 3
-             .text "PAD"
-             .byte <deftweemaal
-             .byte >deftweemaal
-padad: lda#<pad
+defpad:     .byte 3
+            .text "PAD"
+            .byte <deftweemaal
+            .byte >deftweemaal
+padad:      lda#<pad
             sta ad
             lda#>pad
             sta ad+1
             jmp put
 deftweemaal: .byte 2
-             .text "2*"
-             .byte <deftweedeel
-             .byte >deftweedeel
-tweemaal: jsr dropit
+            .text "2*"
+            .byte <deftweedeel
+            .byte >deftweedeel
+tweemaal:   jsr dropit
             asl ad
             rol ad+1
             jmp put
 deftweedeel: .byte 2
-             .text "2/"
-             .byte <defcmove
-             .byte >defcmove
-tweedeel: jsr dropit
+            .text "2/"
+            .byte <defcmove
+            .byte >defcmove
+tweedeel:   jsr dropit
             lsr ad+1
             ror ad
             jmp put
-dropdr: jsr dropit
+dropdr:     jsr dropit
             lda ad
             sta ad+4
             lda ad+1
@@ -2344,20 +2349,20 @@ dropdr: jsr dropit
             lda ad+1
             sta ad+3
             jmp dropit
-defcmove: .byte 5
-             .text "CMOVE"
-             .byte <defdoes
-             .byte >defdoes
-cmove: jsr dropdr
-cmowrm: lda ad+1
+defcmove:   .byte 5
+            .text "CMOVE"
+            .byte <defdoes
+            .byte >defdoes
+cmove:      jsr dropdr
+cmowrm:     lda ad+1
             cmp ad+3
             beq cmna
             bcc cmoveop
             bcs cmoveneer
-cmna: lda ad
+cmna:       lda ad
             cmp ad+2
             bcs cmoveneer
-cmoveop: lda ad+4
+cmoveop:    lda ad+4
             clc
             adc ad
             sta ad
@@ -2386,42 +2391,42 @@ cmoveop: lda ad+4
             sbc#0
             sta ad+3
             ldy#0
-cmdlp: lda ad+4
+cmdlp:      lda ad+4
             bne cmdok
             lda ad+5
             bne cmdok
             rts
-cmdok: jsr cmhup
+cmdok:      jsr cmhup
             dey
             cpy#$FF
             bne cmdlp
             dec ad+1
             dec ad+3
             jmp cmdlp
-cmoveneer: ldy#0
-cmnlp: lda ad+4
+cmoveneer:  ldy#0
+cmnlp:      lda ad+4
             bne cmnok
             lda ad+5
             bne cmnok
             rts
-cmnok: jsr cmhup
+cmnok:      jsr cmhup
             iny
             bne cmnlp
             inc ad+1
             inc ad+3
             jmp cmnlp
-cmhup: lda (ad),Y
+cmhup:      lda (ad),Y
             sta (ad+2),Y
             lda ad+4
             sec
             sbc#1
             sta ad+4
             lda ad+5
-            sbc#0
+            sbc #0
             sta ad+5
             rts
-plusuit: jsr droptw
-            ldy#0
+plusuit:    jsr droptw
+            ldy #0
             lda (ad+2),Y
             clc
             adc ad
@@ -2431,82 +2436,82 @@ plusuit: jsr droptw
             adc ad+1
             sta (ad+2),Y
             rts
-defdoes: .byte 5
-             .text "DOES>"
-             .byte <defdrop
-             .byte >defdrop
-does: lda#$20
+defdoes:    .byte 5
+            .text "DOES>"
+            .byte <defdrop
+            .byte >defdrop
+does:       lda #$20
             jsr czet
-            lda#<doeseen
+            lda #<doeseen
             jsr czet
-            lda#>doeseen
+            lda #>doeseen
             jsr czet
-            lda#$20
+            lda #$20
             jsr czet
-            lda#<doestwee
+            lda #<doestwee
             jsr czet
-            lda#>doestwee
+            lda #>doestwee
             jmp czet
-doeseen: ldy#0
+doeseen:    ldy #0
             lda (lwoord),Y
-            and#$7F
+            and #$7F
             clc
             adc lwoord
             sta ad
             lda lwoord+1
-            adc#0
+            adc #0
             sta ad+1
             lda ad
             clc
-            adc#4
+            adc #4
             sta ad
             lda ad+1
-            adc#0
+            adc #0
             sta ad+1
             pla
             clc
-            adc#1
-            ldy#0
+            adc #1
+            ldy #0
             sta (ad),Y
             iny
             pla
-            adc#0
+            adc #0
             sta (ad),Y
             rts
-doestwee: pla
+doestwee:   pla
             tax
             pla
             tay
             pla
             clc
-            adc#1
+            adc #1
             sta ad
             pla
-            adc#0
+            adc #0
             sta ad+1
             tya
             pha
             txa
             pha
             jmp put
-dad: lda#ad
+dad:        lda#ad
             sta ad
             jsr msb0
             jmp put
-defdrop: .byte 4
-             .text "DROP"
-             .byte <defword
-             .byte >defword
-drop: lda depth
+defdrop:    .byte 4
+            .text "DROP"
+            .byte <defword
+            .byte >defword
+drop:       lda depth
             beq serj
             dec depth
-vrrt: rts
-serj: jmp serror
-vresc: lda$FF
+vrrt:       rts
+serj:       jmp serror
+vresc:      lda$FF
             and#$80
             beq vrrt
             jmp toev
-rdrop: pla
+rdrop:      pla
             tax
             pla
             tay
@@ -2517,7 +2522,7 @@ rdrop: pla
             txa
             pha
             rts
-rp: pla
+rp:         pla
             tay
             pla
             ldx#255
@@ -2526,10 +2531,10 @@ rp: pla
             tya
             pha
             rts
-defword: .byte 4
-             .text "WORD"
-             .byte <defhexdump
-             .byte >defhexdump
+defword:    .byte 4
+            .text "WORD"
+            .byte <defhexdump
+            .byte >defhexdump
 /* WORD           char -- addr                  181
      Receive  characters  from the input stream until the  non-zero
      delimiting  character  is encountered or the input  stream  is
@@ -2540,40 +2545,40 @@ defword: .byte 4
      included  in the count.   If the input stream was exhausted as
      WORD is called,  then a zero length will result.   The address
      of the beginning of this packed string is left on the stack. */
-word: jsr dropit
+word:       jsr dropit
             lda ad
             pha
             jsr padad
             pla
             sta ad
             ldx intib
-worlp:        lda buffer,X
-            cmp#13
+worlp:      lda buffer,X
+            cmp #$D
             beq worret
             cmp ad
             beq worret
             inx
             bne worlp
-worret:     lda#<buffer
+worret:     lda #<buffer
             clc
             adc intib
             sta ad
-            lda#>buffer
-            adc#0
+            lda #>buffer
+            adc #0
             sta ad+1
-            lda#<(pad+1)
+            lda #<(pad+1)
             sta ad+2
-            lda#>(pad+1)
+            lda #>(pad+1)
             sta ad+3
             txa
             sec
             sbc intib
             sta pad
             sta ad+4
-            lda#0
+            lda #0
             sta ad+5
             lda buffer,X
-            cmp#13
+            cmp #$D
             beq worsla
             inx
 worsla:     stx intib
@@ -2584,19 +2589,17 @@ defhexdump: .byte 7                // print a hexdump starting with the address
             .byte 0
             .byte 0
 hexdump:    jsr dropit
-hexdumpi:   ldy#0
+hexdumpi:   lda #'X'
+            jsr oswrch
+            lda ad
+            jsr pbyte
+            lda ad+1
+            jsr pbyte
+            lda #'Y'
+            jsr oswrch
+            ldy #0
 hexloop:    lda (ad),Y
-            tax
-            and #$f0                // grab the higher nibble
-            lsr
-            lsr
-            lsr
-            lsr
-            jsr hpuntout
-            txa
-            and #$f                 // lower nibble
-            jsr hpuntout
-            jsr spc
+            jsr pbyte
             iny
             cpy #17
             bne hexloop
@@ -2605,10 +2608,25 @@ hexloop:    lda (ad),Y
             lda #$A
             jsr oswrch
             rts
-hpuntout:   cmp#10
+hpuntout:   cmp #$A
             bcc hpuntadd      // less than 10
-            adc#('A' - 11)    // since carry = 1, we add one less
+            adc #('A' - 11)    // since carry = 1, we add one less
             jmp oswrch
-hpuntadd:   adc#'0'
+hpuntadd:   adc #'0'
             jmp oswrch
+printad:    lda ad+1
+            jsr pbyte
+            lda ad
+            jmp pbyte
+pbyte:      tax
+            and #$F0                // grab the higher nibble
+            lsr
+            lsr
+            lsr
+            lsr
+            jsr hpuntout
+            txa
+            and #$F                 // lower nibble
+            jsr hpuntout
+            jmp spc
 romhwm:
