@@ -138,20 +138,8 @@ shel:       lda rtxt,X    // print out the Robert's Forth string, stored at rtxt
             bne shel
 shkla:      jsr osnewl
             jmp unniet
-defspc:     .byte 5
-            .text "SPACE"
-            .byte <defspp
-            .byte >defspp
-            .byte <spc
-            .byte >spc
 spc:        lda#32
             jmp oswrch
-defspp:     .byte 3
-            .text "SP!"
-            .byte <defdropit
-            .byte >defdropit
-            .byte <spp
-            .byte >spp
 spp:        lda#0
             sta depth
             rts
@@ -166,12 +154,6 @@ xadr:       lda depth
 xxadr:      asl
             tax
             rts
-defdropit:  .byte 4
-            .text "DROP"
-            .byte <defrat
-            .byte >defrat
-            .byte <dropit
-            .byte >dropit
 dropit:     lda depth           // drop the top of the stack, and retain the value in ad and ad+1
             beq serr            // stack empty, print error message
             jsr xxadr           // multiply depth by 2, to get the offset
@@ -182,12 +164,6 @@ dropit:     lda depth           // drop the top of the stack, and retain the val
             dec depth           // decrement the depth
             rts
 serr:       jmp serror
-defrat:     .byte 2
-            .text "R@"
-            .byte <defi
-            .byte >defi
-            .byte <rat
-            .byte >rat
 rat:        tsx
             txa
             clc
@@ -199,12 +175,6 @@ rat:        tsx
             lda$100,X
             sta ad
             jmp put
-defi:       .byte 1
-            .text "I"
-            .byte <defrrat
-            .byte >defrrat 
-            .byte <i
-            .byte >i
 i:          tsx
             txa
             clc
@@ -216,12 +186,6 @@ i:          tsx
             lda$100,X
             sta ad
             jmp put
-defrrat:    .byte 3
-            .text "RR@"
-            .byte <defj
-            .byte >defj
-            .byte <rrat
-            .byte >rrat
 rrat:       tsx
             txa
             clc
@@ -233,12 +197,6 @@ rrat:       tsx
             lda$100,X
             sta ad
             jmp put
-defj:       .byte 1
-            .text "J"
-            .byte <deffromr
-            .byte >deffromr
-            .byte <j
-            .byte >j
 j:          tsx
             txa
             clc
@@ -250,12 +208,6 @@ j:          tsx
             lda$100,X
             sta ad
             jmp put
-deffromr:   .byte 2
-            .text "R>"
-            .byte <deftor
-            .byte >deftor
-            .byte <fromr
-            .byte >fromr
 fromr:      pla
             tay
             pla
@@ -269,12 +221,6 @@ fromr:      pla
             tya
             pha
             jmp put
-deftor:     .byte 2
-            .text ">R"
-            .byte <defpick
-            .byte >defpick
-            .byte <tor
-            .byte >tor
 tor:        jsr dropit
             pla
             tay
@@ -289,12 +235,6 @@ tor:        jsr dropit
             tya
             pha
             rts
-defpick:    .byte 4
-            .text "PICK"
-            .byte <defdup
-            .byte >defdup
-            .byte <pick
-            .byte >pick
 pick:       jsr dropit
 pickwrm:    jsr xadr
             txa
@@ -308,35 +248,17 @@ pickwrm:    jsr xadr
             lda stack-1,X
             sta ad+1
             jmp put
-defdup:     .byte 3
-            .text "DUP"
-            .byte <defover
-            .byte >defover
-            .byte <dup
-            .byte >dup
 dup:        jsr dropit
             jsr put
             jmp put
 msb0:       lda#0
             sta ad+1
             rts
-defover:    .byte 4
-            .text "OVER"
-            .byte <defswap
-            .byte >defswap
-            .byte <over
-            .byte <over
 over:       ldy#0
             sty ad+1
             iny
             sty ad
             jmp pickwrm
-defswap:    .byte 4
-            .text "SWAP"
-            .byte <defdept
-            .byte >defdept
-            .byte <swap
-            .byte >swap
 swap:       jsr droptw
             lda ad
             pha
@@ -352,22 +274,10 @@ swap:       jsr droptw
             pla
             sta ad
             jmp put
-defdept:    .byte 5
-            .text "DEPTH"
-            .byte <defspaces
-            .byte >defspaces
-            .byte <dept
-            .byte >dept
 dept:       jsr msb0
             lda depth
             sta ad
             jmp put
-defspaces: .byte 6
-            .text "SPACES"
-            .byte <defat
-            .byte >defat
-            .byte <spaces
-            .byte >spaces
 spaces:     jsr dropit
 sok:        lda ad+1
             cmp#0
@@ -383,12 +293,6 @@ dos:        jsr spc
             bne sok
             dec ad+1
             jmp sok
-defat:      .byte 1
-            .text "@"
-            .byte <defpling
-            .byte >defpling
-            .byte <at
-            .byte >at
 at:         jsr dropit
 atwrm:      ldy#0
             lda (ad),Y
@@ -399,12 +303,6 @@ atwrm:      ldy#0
             txa
             sta ad
             jmp put
-defpling:   .byte 1
-            .text "!"
-            .byte <defemit
-            .byte >defemit
-            .byte <pling
-            .byte >pling
 pling:      jsr droptw
             ldy#0
             lda ad
@@ -413,62 +311,26 @@ pling:      jsr droptw
             iny
             sta (ad+2),Y
             rts
-defemit:    .byte 4
-            .text "EMIT"
-            .byte <defcat
-            .byte >defcat
-            .byte <emit
-            .byte >emit
 emit:       jsr dropit
             lda ad
             jmp oswrch
-defcat:     .byte 2
-            .text "C@"
-            .byte <defcpling
-            .byte >defcpling
-            .byte <cat
-            .byte >cat
 cat:        jsr dropit
             ldy#0
             lda (ad),Y
             sta ad
             jsr msb0
             jmp put
-defcpling:  .byte 2
-            .text "C!"
-            .byte <defvrgt
-            .byte >defvrgt
-            .byte <cpling
-            .byte >cpling
 cpling:     jsr droptw
             lda ad
             ldy#0
             sta (ad+2),Y
             rts
-defvrgt:    .byte 1
-            .text "?"
-            .byte <defkey
-            .byte >defkey
-            .byte <vrgt
-            .byte >vrgt
 vrgt:       jsr at
             jmp punt
-defkey:     .byte 3
-            .text "KEY"
-            .byte <defplus
-            .byte >defplus
-            .byte <key
-            .byte >key
 key:        jsr osrdch
             sta ad
             jsr msb0
             jmp put
-defplus:    .byte 1
-            .text "+"
-            .byte <defher
-            .byte >defher
-            .byte <plus
-            .byte >plus
 plus:       jsr droptw
             lda ad
             clc
@@ -478,34 +340,16 @@ plus:       jsr droptw
             adc ad+3
             sta ad+1
             jmp put
-defher:     .byte 4
-            .text "HERE"
-            .byte <deflwoord
-            .byte >deflwoord
-            .byte <her
-            .byte >her
 her:        lda here
             sta ad
             lda here+1
             sta ad+1
             jmp put
-deflwoord:  .byte 6
-            .text "LWOORD"
-            .byte <defallot
-            .byte >defallot
-            .byte <clwoord
-            .byte >clwoord
 clwoord:    lda lwoord
             sta ad
             lda lwoord+1
             sta ad+1
             jmp put
-defallot:   .byte 5
-            .text "ALLOT"
-            .byte <defquery
-            .byte >defquery
-            .byte <allot
-            .byte >allot
 allot:      jsr dropit
 alloti:     lda here
             clc
@@ -515,12 +359,6 @@ alloti:     lda here
             adc ad+1
             sta here+1
             rts
-defquery:   .byte 5
-            .text "QUERY"
-            .byte <defmode
-            .byte >defmode
-            .byte <query
-            .byte >query
 query:      lda#maxlen
             sta ad+2    // ad+2,3 contain the maximum amount of characters to read
             lda#0
@@ -540,12 +378,6 @@ status:     jsr spc     // prints out OK
             jsr oswrch
             lda#'K'
             jmp oswrch
-defmode:    .byte 4
-            .text "MODE"
-            .byte <defwords
-            .byte >defwords
-            .byte <mode
-            .byte >mode
 mode:       jsr dropit  // switch screen mode
             lda#22
             jsr oswrch
@@ -558,12 +390,6 @@ echtexec:   jsr dropit  // jump to the address on top of the stack
             lda ad+1
             sta ad+4
             jmp execute
-defwords:   .byte 5
-            .text "WORDS"
-            .byte <defliteral
-            .byte >defliteral
-            .byte <words
-            .byte >words
 words:      jsr osnewl  // show a list of words
             lda lwoord
             sta ad+5
@@ -708,12 +534,6 @@ result:     lda ad
             rts
 getcom:     jmp literal
 doeiet:     jmp doeiets
-defliteral: .byte 7
-            .text "LITERAL"
-            .byte <deflit
-            .byte >deflit
-            .byte <literal
-            .byte >literal
 literal:    lda#$20        // a literal was found. Add "jsr lit" to the code
             jsr czet        
             lda#<lit
@@ -721,12 +541,6 @@ literal:    lda#$20        // a literal was found. Add "jsr lit" to the code
             lda#>lit
             jsr czet
             jmp komma        // add the literal to the code (2 bytes)
-deflit:     .byte 3
-            .text "LIT"
-            .byte <deffind
-            .byte >deffind
-            .byte <lit
-            .byte >lit
 lit:        pla            // compiled code for literal
             clc            // grab 2 bytes after the PC and put it on the stack
             adc#1        // get the PC by retrieving it from the return stack with pla
@@ -837,12 +651,6 @@ allot2:     lda#2
             rts
 nigetal:    jmp werror
 doewe:      jmp (ad)
-deffind:    .byte 4
-            .text "FIND"
-            .byte <definterpret
-            .byte >definterpret
-            .byte <interpret
-            .byte >interpret
             jsr findit              // find the word, and put the address on the stack
             jmp put
 findit:     jsr skips            // find a word that is pointed to by buffer+intib. Skip spaces
@@ -875,12 +683,6 @@ findit:     jsr skips            // find a word that is pointed to by buffer+int
             bne firet
             jmp werror
 firet:      rts
-definterpret: .byte 9
-            .text "INTERPRET"
-            .byte <defforget
-            .byte >defforget
-            .byte <interpret
-            .byte >interpret
 interpret:  lda #0
             sta intib
 intp:       jsr skips
@@ -918,12 +720,6 @@ intp:       jsr skips
             jsr doe       // execute word
             jmp intp
 inret:      rts
-defforget:  .byte 6
-            .text "FORGET"
-            .byte <defstart
-            .byte >defstart
-            .byte <forget
-            .byte >forget
 forget:     jsr findit
             lda ad+3
             bne forgok
@@ -982,21 +778,9 @@ comr:       rts
 langen:     cmp#1
             beq startlab
             rts
-defstart:   .byte 5
-            .text "START"
-            .byte <definit
-            .byte >definit
-            .byte <startlab
-            .byte >startlab
 startlab:    cli
             jsr init
             jmp abort
-definit:    .byte 4
-            .text "INIT"
-            .byte <defrom
-            .byte >defrom
-            .byte <init
-            .byte >init
 init:       lda#<brkk
             sta brkv
             lda#>brkk
@@ -1015,12 +799,6 @@ init:       lda#<brkk
             lda #$34
             sta seed+1
             jmp decimal
-defrom:     .byte 3
-            .text "ROM"
-            .byte <defram
-            .byte >defram
-            .byte <rom
-            .byte >rom
 rom:        lda herstor
             sta here
             lda herstor+1
@@ -1030,12 +808,6 @@ rom:        lda herstor
             lda lstor+1
             sta lwoord+1
             rts
-defram:     .byte 3
-            .text "RAM"
-            .byte <defabort
-            .byte >defabort
-            .byte <ram
-            .byte >ram
 ram:        lda#131
             jsr osbyte
             stx here
@@ -1047,23 +819,11 @@ etxt:       .byte 0
             .byte$11
             .text "Escape"
             .byte 0
-defabort:   .byte 5
-            .text "ABORT"
-            .byte <defquit
-            .byte >defquit
-            .byte <abort
-            .byte >abort
 abort:      jsr spp
             lda state
             beq qlp
             jsr status
             jmp qlp
-defquit:    .byte 4
-            .text "QUIT"
-            .byte <defdblpunt
-            .byte >defdblpunt
-            .byte <qlp
-            .byte >qlp
 qlp:        jsr osnewl            // main query/interpret loop
             ldx#255
             txs
@@ -1168,33 +928,15 @@ voegst:     dey
             adc here+1
             sta here+1
             rts
-defdblpunt: .byte 1
-            .text ":"
-            .byte <defpntkomma
-            .byte >defpntkomma
-            .byte <dplpnt
-            .byte >dplpnt
 dblpnt:     jsr voegtoe
             lda#1
             sta state
             rts
-defpntkomma: .byte $81
-            .text ";"
-            .byte <defcreate
-            .byte >defcreate
-            .byte <pntkomma
-            .byte >pntkomma
 pntkomma:   lda#$60
             jsr czet
             lda#0
             sta state
             rts
-defcreate:  .byte 6
-            .text "CREATE"
-            .byte <defconstant
-            .byte >defconstant
-            .byte <create
-            .byte >create
 create:     jsr voegtoe
             lda#$20
             jsr czet
@@ -1210,12 +952,6 @@ creac:      pla
             adc#0
             sta ad+1
             jmp put
-defconstant: .byte 8
-            .text "CONSTANT"
-            .byte <defstt
-            .byte >defstt
-            .byte <constant
-            .byte >constant
 constant:   jsr voegtoe
             lda#$20
             jsr czet
@@ -1232,34 +968,16 @@ constc:     pla
             adc#0
             sta ad+1
             jmp atwrm
-defstt:     .byte 5
-            .text "STATE"
-            .byte <defbse
-            .byte >defbse
-            .byte <stt
-            .byte >stt
 stt:        lda#<state
             sta ad
             lda#>state
             sta ad+1
             jmp put
-defbse:     .byte 4
-            .text "BASE"
-            .byte <defnulis
-            .byte >defnulis
-            .byte <bse
-            .byte >bse
 bse:        lda#<base
             sta ad
             lda#>base
             sta ad+1
             jmp put
-defnulis:   .byte 2
-            .text "0="
-            .byte <deftrue
-            .byte >deftrue
-            .byte <nulis
-            .byte >nulis
 nulis:      jsr dropit
             lda#0
             cmp ad
@@ -2837,4 +2555,286 @@ pbyte:      tax
             and #$F                 // lower nibble
             jsr hpuntout
             jmp spc
+defspc:     .byte 5
+            .text "SPACE"
+            .byte <defspp
+            .byte >defspp
+            .byte <spc
+            .byte >spc
+defspp:     .byte 3
+            .text "SP!"
+            .byte <defdropit
+            .byte >defdropit
+            .byte <spp
+            .byte >spp
+defdropit:  .byte 4
+            .text "DROP"
+            .byte <defrat
+            .byte >defrat
+            .byte <dropit
+            .byte >dropit
+defrat:     .byte 2
+            .text "R@"
+            .byte <defi
+            .byte >defi
+            .byte <rat
+            .byte >rat
+defi:       .byte 1
+            .text "I"
+            .byte <defrrat
+            .byte >defrrat 
+            .byte <i
+            .byte >i
+defrrat:    .byte 3
+            .text "RR@"
+            .byte <defj
+            .byte >defj
+            .byte <rrat
+            .byte >rrat
+defj:       .byte 1
+            .text "J"
+            .byte <deffromr
+            .byte >deffromr
+            .byte <j
+            .byte >j
+deffromr:   .byte 2
+            .text "R>"
+            .byte <deftor
+            .byte >deftor
+            .byte <fromr
+            .byte >fromr
+deftor:     .byte 2
+            .text ">R"
+            .byte <defpick
+            .byte >defpick
+            .byte <tor
+            .byte >tor
+defpick:    .byte 4
+            .text "PICK"
+            .byte <defdup
+            .byte >defdup
+            .byte <pick
+            .byte >pick
+defdup:     .byte 3
+            .text "DUP"
+            .byte <defover
+            .byte >defover
+            .byte <dup
+            .byte >dup
+defover:    .byte 4
+            .text "OVER"
+            .byte <defswap
+            .byte >defswap
+            .byte <over
+            .byte <over
+defswap:    .byte 4
+            .text "SWAP"
+            .byte <defdept
+            .byte >defdept
+            .byte <swap
+            .byte >swap
+defdept:    .byte 5
+            .text "DEPTH"
+            .byte <defspaces
+            .byte >defspaces
+            .byte <dept
+            .byte >dept
+defspaces: .byte 6
+            .text "SPACES"
+            .byte <defat
+            .byte >defat
+            .byte <spaces
+            .byte >spaces
+defat:      .byte 1
+            .text "@"
+            .byte <defpling
+            .byte >defpling
+            .byte <at
+            .byte >at
+defpling:   .byte 1
+            .text "!"
+            .byte <defemit
+            .byte >defemit
+            .byte <pling
+            .byte >pling
+defemit:    .byte 4
+            .text "EMIT"
+            .byte <defcat
+            .byte >defcat
+            .byte <emit
+            .byte >emit
+defcat:     .byte 2
+            .text "C@"
+            .byte <defcpling
+            .byte >defcpling
+            .byte <cat
+            .byte >cat
+defcpling:  .byte 2
+            .text "C!"
+            .byte <defvrgt
+            .byte >defvrgt
+            .byte <cpling
+            .byte >cpling
+defvrgt:    .byte 1
+            .text "?"
+            .byte <defkey
+            .byte >defkey
+            .byte <vrgt
+            .byte >vrgt
+defkey:     .byte 3
+            .text "KEY"
+            .byte <defplus
+            .byte >defplus
+            .byte <key
+            .byte >key
+defplus:    .byte 1
+            .text "+"
+            .byte <defher
+            .byte >defher
+            .byte <plus
+            .byte >plus
+defher:     .byte 4
+            .text "HERE"
+            .byte <deflwoord
+            .byte >deflwoord
+            .byte <her
+            .byte >her
+deflwoord:  .byte 6
+            .text "LWOORD"
+            .byte <defallot
+            .byte >defallot
+            .byte <clwoord
+            .byte >clwoord
+defallot:   .byte 5
+            .text "ALLOT"
+            .byte <defquery
+            .byte >defquery
+            .byte <allot
+            .byte >allot
+defquery:   .byte 5
+            .text "QUERY"
+            .byte <defmode
+            .byte >defmode
+            .byte <query
+            .byte >query
+defmode:    .byte 4
+            .text "MODE"
+            .byte <defwords
+            .byte >defwords
+            .byte <mode
+            .byte >mode
+defwords:   .byte 5
+            .text "WORDS"
+            .byte <defliteral
+            .byte >defliteral
+            .byte <words
+            .byte >words
+defliteral: .byte 7
+            .text "LITERAL"
+            .byte <deflit
+            .byte >deflit
+            .byte <literal
+            .byte >literal
+deflit:     .byte 3
+            .text "LIT"
+            .byte <deffind
+            .byte >deffind
+            .byte <lit
+            .byte >lit
+deffind:    .byte 4
+            .text "FIND"
+            .byte <definterpret
+            .byte >definterpret
+            .byte <interpret
+            .byte >interpret
+definterpret: .byte 9
+            .text "INTERPRET"
+            .byte <defforget
+            .byte >defforget
+            .byte <interpret
+            .byte >interpret
+defforget:  .byte 6
+            .text "FORGET"
+            .byte <defstart
+            .byte >defstart
+            .byte <forget
+            .byte >forget
+defstart:   .byte 5
+            .text "START"
+            .byte <definit
+            .byte >definit
+            .byte <startlab
+            .byte >startlab
+definit:    .byte 4
+            .text "INIT"
+            .byte <defrom
+            .byte >defrom
+            .byte <init
+            .byte >init
+defrom:     .byte 3
+            .text "ROM"
+            .byte <defram
+            .byte >defram
+            .byte <rom
+            .byte >rom
+defram:     .byte 3
+            .text "RAM"
+            .byte <defabort
+            .byte >defabort
+            .byte <ram
+            .byte >ram
+defabort:   .byte 5
+            .text "ABORT"
+            .byte <defquit
+            .byte >defquit
+            .byte <abort
+            .byte >abort
+defquit:    .byte 4
+            .text "QUIT"
+            .byte <defdblpunt
+            .byte >defdblpunt
+            .byte <qlp
+            .byte >qlp
+defdblpunt: .byte 1
+            .text ":"
+            .byte <defpntkomma
+            .byte >defpntkomma
+            .byte <dblpnt
+            .byte >dblpnt
+defpntkomma: .byte $81
+            .text ";"
+            .byte <defcreate
+            .byte >defcreate
+            .byte <pntkomma
+            .byte >pntkomma
+defcreate:  .byte 6
+            .text "CREATE"
+            .byte <defconstant
+            .byte >defconstant
+            .byte <create
+            .byte >create
+defconstant: .byte 8
+            .text "CONSTANT"
+            .byte <defstt
+            .byte >defstt
+            .byte <constant
+            .byte >constant
+defstt:     .byte 5
+            .text "STATE"
+            .byte <defbse
+            .byte >defbse
+            .byte <stt
+            .byte >stt
+defbse:     .byte 4
+            .text "BASE"
+            .byte <defnulis
+            .byte >defnulis
+            .byte <bse
+            .byte >bse
+defnulis:   .byte 2
+            .text "0="
+            .byte <deftrue
+            .byte >deftrue
+            .byte <nulis
+            .byte >nulis
 romhwm:
