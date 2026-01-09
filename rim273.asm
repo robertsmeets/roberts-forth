@@ -986,12 +986,6 @@ nulis:      jsr dropit
             bne nnul
             jmp truelab
 nnul:       jmp falselab
-defiss:     .byte 1
-            .text "="
-            .byte <defnulkl
-            .byte >defnulkl
-            .byte <iss
-            .byte >iss
 iss:        jsr droptw
             lda ad
             cmp ad+2
@@ -1000,43 +994,19 @@ iss:        jsr droptw
             cmp ad+3
             bne falselab
             beq truelab
-defnulkl:   .byte 2
-            .text "0<"
-            .byte <defnulgr
-            .byte >defnulgr
-            .byte <nulkl
-            .byte >nulkl
 nulkl:      jsr dropit
             lda ad+1
             bmi truelab
             bpl falselab
-deftrue:    .byte 4
-            .text "TRUE"
-            .byte <deffalse
-            .byte >deffalse
-            .byte <truelab
-            .byte >truelab
 truelab:    ldy#0
             sty ad+1
             iny
             sty ad
             jmp put
-deffalse:   .byte 5
-            .text "FALSE"
-            .byte <defiss
-            .byte >defiss
-            .byte <falselab
-            .byte >falselab
 falselab:   lda#0
             sta ad
             sta ad+1
             jmp put
-defnulgr:   .byte 2
-            .text "0>"
-            .byte <defkl
-            .byte >defkl
-            .byte <nulgr
-            .byte >nulgr
 nulgr:      jsr dropit
             lda ad+1
             bmi falselab
@@ -1044,12 +1014,6 @@ nulgr:      jsr dropit
             lda ad
             bne truelab
             beq falselab
-defkl:      .byte 1
-            .text "<"
-            .byte <defgr
-            .byte >defgr
-            .byte <kl
-            .byte >kl
 kl:         jsr droptw
             lda ad+1
             cmp ad+3
@@ -1060,12 +1024,6 @@ klna:       lda ad
             cmp ad+2
             bcs falselab
             bcc truelab
-defgr:      .byte 1
-            .text ">"
-            .byte <defimmediate
-            .byte >defimmediate
-            .byte <gr
-            .byte >gr
 gr:         jsr droptw
             lda ad+1
             cmp ad+3
@@ -1083,12 +1041,6 @@ ukl:        jsr droptw
             beq klna
             bcc truelab
             bcs falselab
-defimmediate: .byte 9
-            .text "IMMEDIATE"
-            .byte <deftprint
-            .byte >deftprint
-            .byte <immediate
-            .byte >immediate
 immediate:  lda lwoord
             sta ad
             lda lwoord+1
@@ -1122,12 +1074,6 @@ stprret:    sta (here),Y
             sty ad
             jsr msb0
             jmp alloti
-deftprint:  .byte $82
-            .text @".\""
-            .byte <deftype
-            .byte >deftype
-            .byte <tprint
-            .byte >tprint
 tprint:     lda state
             beq tprdoe
             lda#$20
@@ -1247,12 +1193,6 @@ stcode:     pla
             adc#0
             sta ad+1
             jmp (ad)
-deftype:    .byte 4
-            .text "TYPE"
-            .byte <defcls
-            .byte >defcls
-            .byte <type
-            .byte >type
 type:       jsr droptw
 typwrm:     lda ad
             clc
@@ -1279,12 +1219,6 @@ tyhup:      lda (ad),Y
             adc ad+1
             sta ad+1
             jmp tyloop
-defcls:     .byte 3
-            .text "CLS"
-            .byte <defexpect
-            .byte >defexpect
-            .byte <cls
-            .byte >cls
 cls:        lda#12             // clear screen
             jmp oswrch
 droptw:     jsr dropit
@@ -1293,12 +1227,6 @@ droptw:     jsr dropit
             lda ad+1
             sta ad+3
             jmp dropit
-defexpect:  .byte 6
-            .text "EXPECT"
-            .byte <defkomma
-            .byte >defkomma
-            .byte <expect
-            .byte >expect
 //    EXPECT       addr +n --                    M,83
 //           Receive characters and store each into memory.  The transfer
 //           begins at addr proceeding towards higher addresses one byte
@@ -1371,12 +1299,6 @@ exdoedel:   sec
             lda#127
             jsr oswrch
             jmp exloop
-defkomma:   .byte 1
-            .text ","
-            .byte <defckomma
-            .byte >defckomma
-            .byte <komma
-            .byte >komma
 komma:      jsr dropit
 komwrm:     ldy#0
             lda ad
@@ -1385,12 +1307,6 @@ komwrm:     ldy#0
             lda ad+1
             sta (here),Y
             jmp allot2
-defckomma:  .byte 2
-            .text "C,"
-            .byte <defeenplus
-            .byte >defeenplus
-            .byte <ckomma
-            .byte >ckomma
 ckomma:     jsr dropit
 ckomwrm:    lda ad
 czet:       ldy#0
@@ -1399,12 +1315,6 @@ allotl:     ldx#1
             stx ad
             jsr msb0
             jmp alloti
-defeenplus: .byte 2
-            .text "1+"
-            .byte <defeenmin
-            .byte >defeenmin
-            .byte <eenplus
-            .byte >eenplus
 eenplus:    jsr dropit
 eenpluswrm: lda#0
             sec
@@ -1414,12 +1324,6 @@ eenpluswrm: lda#0
             adc ad+1
             sta ad+1
             jmp put
-defeenmin:  .byte 2
-            .text "1-"
-            .byte <deftweeplus
-            .byte >deftweeplus
-            .byte <eenmin
-            .byte >eenmin
 eenmin:     jsr dropit
             lda ad
             clc
@@ -1429,12 +1333,6 @@ eenmin:     jsr dropit
             sbc#0
             sta ad+1
             jmp put
-deftweeplus: .byte 2
-            .text "2+"
-            .byte <deftweemin
-            .byte >deftweemin
-            .byte <tweeplus
-            .byte >tweeplus
 tweeplus:   jsr dropit
             lda#1
             sec
@@ -1444,12 +1342,6 @@ tweeplus:   jsr dropit
             adc ad+1
             sta ad+1
             jmp put
-deftweemin: .byte 2
-            .text "2-"
-            .byte <defnegate
-            .byte >defnegate
-            .byte <tweemin
-            .byte >tweemin
 tweemin:    jsr dropit
             lda ad
             clc
@@ -1459,12 +1351,6 @@ tweemin:    jsr dropit
             sbc#0
             sta ad+1
             jmp put
-defnegate:  .byte 6
-            .text "NEGATE"
-            .byte <defmin
-            .byte >defmin
-            .byte <negate
-            .byte >negate
 negate:     jsr dropit
 negwrm:     lda ad
             eor#$FF
@@ -1473,12 +1359,6 @@ negwrm:     lda ad
             eor#$FF
             sta ad+1
             jmp eenpluswrm
-defmin:     .byte 1
-            .text "-"
-            .byte <defmaal
-            .byte >defmaal
-            .byte <min
-            .byte >min
 min:        jsr droptw                // subtract
             lda ad
             sec
@@ -1511,12 +1391,6 @@ masch:      lsr ad+3
             asl ad+4
             rol ad+5
             jmp maloop
-defmaal:    .byte 1
-            .text "*"
-            .byte <defupunt
-            .byte >defupunt
-            .byte <maal
-            .byte >maal
 maal:       jsr droptw
             lda ad
             sta ad+4
@@ -1524,12 +1398,6 @@ maal:       jsr droptw
             sta ad+5
             jsr maalwrm
             jmp put
-defupunt:   .byte 2
-            .text "U."
-            .byte <defpunt
-            .byte >defpunt
-            .byte <upunt
-            .byte >upunt
 upunt:      jsr dropit
 upuntwrm:   lda#$FF
 puntnbit:   pha
@@ -1566,12 +1434,6 @@ puntadd:    adc#48
             pla
             bpl puntout
 puntexit:   jmp spc
-defpunt:    .byte 1
-            .text "."
-            .byte <defdecimal
-            .byte >defdecimal
-            .byte <punt
-            .byte >punt
 punt:       jsr dropit
             lda ad+1
             bpl upuntwrm
@@ -1587,12 +1449,6 @@ punt:       jsr dropit
             adc #0
             sta ad+1
             jmp upuntwrm
-defdecimal: .byte 7
-            .text "DECIMAL"
-            .byte <deferv
-            .byte >deferv
-            .byte <decimal
-            .byte >decimal
 decimal:    lda#10
 bazep:      sta base
             lda#0
@@ -1617,53 +1473,23 @@ brkla:      sty ad
             jsr brkin
             jmp abort
 brkin:      jmp (ervek)
-deferv:     .byte 5
-            .text "ERVEK"
-            .byte <defdp
-            .byte >defdp
-            .byte <erv
-            .byte >erv
 erv:        lda#<ervek
             sta ad
             lda#>ervek
             sta ad+1
             jmp put
-defdp:      .byte 2
-            .text "DP"
-            .byte <defexit
-            .byte >defexit
-            .byte <dp
-            .byte >dp
 dp:         lda#<here
             sta ad
             lda#>here
             sta ad+1
             jmp put
-defexit:    .byte 4
-            .text "EXIT"
-            .byte <defabs
-            .byte >defabs
-            .byte <exit
-            .byte >exit
 exit:       lda#$60
             jmp czet
-defabs:     .byte 3
-            .text "ABS"
-            .byte <defand
-            .byte >defand
-            .byte <abs
-            .byte >abs
 abs:        jsr dropit
             lda ad+1
             bpl absrt
             jmp negwrm
 absrt:      jmp put
-defand:     .byte 3
-            .text "AND"
-            .byte <defor
-            .byte >defor
-            .byte <and
-            .byte >and
 and:        jsr droptw
             lda ad
             and ad+2
@@ -1672,12 +1498,6 @@ and:        jsr droptw
             and ad+3
             sta ad+1
             jmp put
-defor:      .byte 2
-            .text "OR"
-            .byte <defxor
-            .byte >defxor
-            .byte <or
-            .byte >or
 or:         jsr droptw
             lda ad
             ora ad+2
@@ -1686,12 +1506,6 @@ or:         jsr droptw
             ora ad+3
             sta ad+1
             jmp put
-defxor:     .byte 3
-            .text "XOR"
-            .byte <deftick
-            .byte >deftick
-            .byte <xor
-            .byte >xor
 xor:        jsr droptw
             lda ad
             eor ad+2
@@ -1700,12 +1514,6 @@ xor:        jsr droptw
             eor ad+3
             sta ad+1
             jmp put
-deftick:    .byte 1
-            .text "'"
-            .byte <defdocode
-            .byte >defdocode
-            .byte <tick
-            .byte >tick
 tick:       jsr findit
             lda ad
             clc
@@ -1719,12 +1527,6 @@ tick:       jsr findit
             beq ticklr
             jmp literal
 ticklr:     rts
-defdocode:  .byte 4
-            .text "(DO)"
-            .byte <defplusloopcode
-            .byte >defplusloopcode
-            .byte <docode
-            .byte >docode
 docode:     jsr droptw
             pla
             tax
@@ -1743,12 +1545,6 @@ docode:     jsr droptw
             txa
             pha
             rts
-defplusloopcode: .byte 7
-            .text "(+LOOP)"
-            .byte <defloopcode
-            .byte >defloopcode
-            .byte <plusloopcode
-            .byte >plusloopcode
 plusloopcode: jsr dropit
             pla
             tax
@@ -1761,12 +1557,6 @@ plusloopcode: jsr dropit
             pla
             adc ad+1
             jmp looprest
-defloopcode: .byte 6
-            .text "(LOOP)"
-            .byte <defhex
-            .byte >defhex
-            .byte <loopcode
-            .byte >loopcode
 loopcode:   pla
             tax
             pla
@@ -1812,20 +1602,8 @@ loopvlg:    lda ad+1
             txa
             pha
             rts
-defhex:     .byte 3
-            .text "HEX"
-            .byte <defrnd
-            .byte >defrnd
-            .byte <hex
-            .byte >hex
 hex:        lda#16
             jmp bazep
-defrnd:     .byte 3
-            .text "RND"
-            .byte <defhcompile
-            .byte >defhcompile
-            .byte <rnd
-            .byte >rnd
 rnd:        ldy#$20
 rndnext:    lda seed+2
             lsr
@@ -1856,23 +1634,11 @@ sed:        jsr droptw
             lda ad+3
             sta seed+3
             rts
-defhcompile: .byte $89
-            .text "[COMPILE]"
-            .byte <defcompile
-            .byte >defcompile
-            .byte <hcompile
-            .byte >hcompile
 hcompile:   jsr findit
             jsr put
             lda#$20
             jsr czet        
             jmp komma
-defcompile: .byte $87
-            .text "COMPILE"
-            .byte <defsave
-            .byte >defsave
-            .byte <compile
-            .byte >compile
 compile:    jsr findit
             jsr put
             lda#$20
@@ -1905,12 +1671,6 @@ compcode:   lda#$20
             txa
             pha
             rts
-defsave:    .byte 4
-            .text "SAVE"
-            .byte <defsaveready
-            .byte >defsaveready
-            .byte <save
-            .byte >save
 save:       jsr saveready
             lda#<buffer
             clc
@@ -1947,12 +1707,6 @@ save:       jsr saveready
             ldx#<pad             // x and y point to pad, which contains the control block for OSFILE
             ldy#>pad
             jmp osfile
-defsaveready: .byte 9
-            .text "SAVEREADY"
-            .byte <defrot
-            .byte >defrot
-            .byte <saveready
-            .byte >saveready
 saveready:  lda here            // save HERE and LWOORD in herstor and lstor as preparation for save
             sta herstor
             lda here+1
@@ -1962,12 +1716,6 @@ saveready:  lda here            // save HERE and LWOORD in herstor and lstor as 
             lda lwoord+1
             sta lstor+1
             rts
-defrot:     .byte 3
-            .text "ROT"
-            .byte <defleave
-            .byte >defleave
-            .byte <rot
-            .byte >rot
 rot:        jsr droptw
             lda ad
             pha
@@ -1993,12 +1741,6 @@ rot:        jsr droptw
             lda ad+5
             sta ad+1
             jmp put
-defleave:   .byte 5
-            .text "LEAVE"
-            .byte <deftwee
-            .byte >deftwee
-            .byte <leave
-            .byte >leave
 leave:      pla
             tax
             pla
@@ -2021,22 +1763,10 @@ leave:      pla
             txa
             pha
             rts
-deftwee:    .byte 1
-            .text "2"
-            .byte <defdrie
-            .byte >defdrie
-            .byte <twee
-            .byte >twee
 twee:       lda#2
 mbput:      sta ad
             jsr msb0
             jmp put
-defdrie:    .byte 1
-            .text "3"
-            .byte <defdeel
-            .byte >defdeel
-            .byte <drie
-            .byte >drie
 drie:       lda#3
             bne mbput
 deelo:      jsr droptw
@@ -2130,20 +1860,8 @@ dldone:     dex
             adc #0
             sta ad+5
 dlrts:      rts
-defdeel:    .byte 1
-            .text "/"
-            .byte <defmod
-            .byte >defmod
-            .byte <deel
-            .byte >deel
 deel:       jsr deelo
             jmp put
-defmod:     .byte 3
-            .text "MOD"
-            .byte <defbranch0
-            .byte >defbranch0
-            .byte <mod
-            .byte >mod
 mod:        jsr deelo
             lda ad+4
             sta ad
@@ -2173,12 +1891,6 @@ vrdup:      jsr dropit
             bne vrnk
             rts
 vrnk:       jmp dup
-defbranch0: .byte 7
-            .text "0BRANCH"
-            .byte <defcall
-            .byte >defcall
-            .byte <branch0
-            .byte >branch0
 branch0:    jsr dropit
             lda ad
             bne bra
@@ -2195,12 +1907,6 @@ bra:        pla
             txa
             pha
             rts
-defcall:    .byte 4
-            .text "CALL"
-            .byte <defpad
-            .byte >defpad
-            .byte <call
-            .byte >call
 call:       jsr droptw
             lda ad
             pha
@@ -2223,33 +1929,15 @@ osc:        jsr dropit
             ldx ad
             ldy ad+1
             jmp oscli
-defpad:     .byte 3
-            .text "PAD"
-            .byte <deftweemaal
-            .byte >deftweemaal
-            .byte <padad
-            .byte >padad
 padad:      lda#<pad
             sta ad
             lda#>pad
             sta ad+1
             jmp put
-deftweemaal: .byte 2
-            .text "2*"
-            .byte <deftweedeel
-            .byte >deftweedeel
-            .byte <tweemaal
-            .byte >tweemaal
 tweemaal:   jsr dropit
             asl ad
             rol ad+1
             jmp put
-deftweedeel: .byte 2
-            .text "2/"
-            .byte <defcmove
-            .byte >defcmove
-            .byte <tweedeel
-            .byte >tweedeel
 tweedeel:   jsr dropit
             lsr ad+1
             ror ad
@@ -2265,12 +1953,6 @@ dropdr:     jsr dropit
             lda ad+1
             sta ad+3
             jmp dropit
-defcmove:   .byte 5
-            .text "CMOVE"
-            .byte <defdoes
-            .byte >defdoes
-            .byte <cmove
-            .byte >cmove
 cmove:      jsr dropdr
 cmowrm:     lda ad+1
             cmp ad+3
@@ -2354,12 +2036,6 @@ plusuit:    jsr droptw
             adc ad+1
             sta (ad+2),Y
             rts
-defdoes:    .byte 5
-            .text "DOES>"
-            .byte <defdrop
-            .byte >defdrop
-            .byte <does
-            .byte >does
 does:       lda #$20
             jsr czet
             lda #<doeseen
@@ -2418,12 +2094,6 @@ dad:        lda#ad
             sta ad
             jsr msb0
             jmp put
-defdrop:    .byte 4
-            .text "DROP"
-            .byte <defword
-            .byte >defword
-            .byte <drop
-            .byte >drop
 drop:       lda depth
             beq serj
             dec depth
@@ -2453,12 +2123,6 @@ rp:         pla
             tya
             pha
             rts
-defword:    .byte 4
-            .text "WORD"
-            .byte <defhexdump
-            .byte >defhexdump
-            .byte <word
-            .byte >word
 /* WORD           char -- addr                  181
      Receive  characters  from the input stream until the  non-zero
      delimiting  character  is encountered or the input  stream  is
@@ -2508,12 +2172,6 @@ worret:     lda #<buffer
 worsla:     stx intib
             jsr cmowrm
             jmp skips
-defhexdump: .byte 7                // print a hexdump starting with the address 
-            .text "HEXDUMP"        // of the top of the stack for 16 bytes
-            .byte 0
-            .byte 0
-            .byte <hexdump
-            .byte >hexdump
 hexdump:    jsr dropit
 hexdumpi:   lda #'X'
             jsr oswrch
@@ -2837,4 +2495,346 @@ defnulis:   .byte 2
             .byte >deftrue
             .byte <nulis
             .byte >nulis
+defiss:     .byte 1
+            .text "="
+            .byte <defnulkl
+            .byte >defnulkl
+            .byte <iss
+            .byte >iss
+defnulkl:   .byte 2
+            .text "0<"
+            .byte <defnulgr
+            .byte >defnulgr
+            .byte <nulkl
+            .byte >nulkl
+deftrue:    .byte 4
+            .text "TRUE"
+            .byte <deffalse
+            .byte >deffalse
+            .byte <truelab
+            .byte >truelab
+deffalse:   .byte 5
+            .text "FALSE"
+            .byte <defiss
+            .byte >defiss
+            .byte <falselab
+            .byte >falselab
+defnulgr:   .byte 2
+            .text "0>"
+            .byte <defkl
+            .byte >defkl
+            .byte <nulgr
+            .byte >nulgr
+defkl:      .byte 1
+            .text "<"
+            .byte <defgr
+            .byte >defgr
+            .byte <kl
+            .byte >kl
+defgr:      .byte 1
+            .text ">"
+            .byte <defimmediate
+            .byte >defimmediate
+            .byte <gr
+            .byte >gr
+deftprint:  .byte $82
+            .text @".\""
+            .byte <deftype
+            .byte >deftype
+            .byte <tprint
+            .byte >tprint
+defimmediate: .byte 9
+            .text "IMMEDIATE"
+            .byte <deftprint
+            .byte >deftprint
+            .byte <immediate
+            .byte >immediate
+deftype:    .byte 4
+            .text "TYPE"
+            .byte <defcls
+            .byte >defcls
+            .byte <type
+            .byte >type
+defcls:     .byte 3
+            .text "CLS"
+            .byte <defexpect
+            .byte >defexpect
+            .byte <cls
+            .byte >cls
+defexpect:  .byte 6
+            .text "EXPECT"
+            .byte <defkomma
+            .byte >defkomma
+            .byte <expect
+            .byte >expect
+defkomma:   .byte 1
+            .text ","
+            .byte <defckomma
+            .byte >defckomma
+            .byte <komma
+            .byte >komma
+defeenplus: .byte 2
+            .text "1+"
+            .byte <defeenmin
+            .byte >defeenmin
+            .byte <eenplus
+            .byte >eenplus
+defckomma:  .byte 2
+            .text "C,"
+            .byte <defeenplus
+            .byte >defeenplus
+            .byte <ckomma
+            .byte >ckomma
+deftweeplus: .byte 2
+            .text "2+"
+            .byte <deftweemin
+            .byte >deftweemin
+            .byte <tweeplus
+            .byte >tweeplus
+defeenmin:  .byte 2
+            .text "1-"
+            .byte <deftweeplus
+            .byte >deftweeplus
+            .byte <eenmin
+            .byte >eenmin
+deftweemin: .byte 2
+            .text "2-"
+            .byte <defnegate
+            .byte >defnegate
+            .byte <tweemin
+            .byte >tweemin
+defnegate:  .byte 6
+            .text "NEGATE"
+            .byte <defmin
+            .byte >defmin
+            .byte <negate
+            .byte >negate
+defmin:     .byte 1
+            .text "-"
+            .byte <defmaal
+            .byte >defmaal
+            .byte <min
+            .byte >min
+defmaal:    .byte 1
+            .text "*"
+            .byte <defupunt
+            .byte >defupunt
+            .byte <maal
+            .byte >maal
+defupunt:   .byte 2
+            .text "U."
+            .byte <defpunt
+            .byte >defpunt
+            .byte <upunt
+            .byte >upunt
+defpunt:    .byte 1
+            .text "."
+            .byte <defdecimal
+            .byte >defdecimal
+            .byte <punt
+            .byte >punt
+defdecimal: .byte 7
+            .text "DECIMAL"
+            .byte <deferv
+            .byte >deferv
+            .byte <decimal
+            .byte >decimal
+deferv:     .byte 5
+            .text "ERVEK"
+            .byte <defdp
+            .byte >defdp
+            .byte <erv
+            .byte >erv
+defdp:      .byte 2
+            .text "DP"
+            .byte <defexit
+            .byte >defexit
+            .byte <dp
+            .byte >dp
+defexit:    .byte 4
+            .text "EXIT"
+            .byte <defabs
+            .byte >defabs
+            .byte <exit
+            .byte >exit
+defabs:     .byte 3
+            .text "ABS"
+            .byte <defand
+            .byte >defand
+            .byte <abs
+            .byte >abs
+defand:     .byte 3
+            .text "AND"
+            .byte <defor
+            .byte >defor
+            .byte <and
+            .byte >and
+defor:      .byte 2
+            .text "OR"
+            .byte <defxor
+            .byte >defxor
+            .byte <or
+            .byte >or
+defxor:     .byte 3
+            .text "XOR"
+            .byte <deftick
+            .byte >deftick
+            .byte <xor
+            .byte >xor
+deftick:    .byte 1
+            .text "'"
+            .byte <defdocode
+            .byte >defdocode
+            .byte <tick
+            .byte >tick
+defdocode:  .byte 4
+            .text "(DO)"
+            .byte <defplusloopcode
+            .byte >defplusloopcode
+            .byte <docode
+            .byte >docode
+defplusloopcode: .byte 7
+            .text "(+LOOP)"
+            .byte <defloopcode
+            .byte >defloopcode
+            .byte <plusloopcode
+            .byte >plusloopcode
+defloopcode: .byte 6
+            .text "(LOOP)"
+            .byte <defhex
+            .byte >defhex
+            .byte <loopcode
+            .byte >loopcode
+defhex:     .byte 3
+            .text "HEX"
+            .byte <defrnd
+            .byte >defrnd
+            .byte <hex
+            .byte >hex
+defrnd:     .byte 3
+            .text "RND"
+            .byte <defhcompile
+            .byte >defhcompile
+            .byte <rnd
+            .byte >rnd
+defhcompile: .byte $89
+            .text "[COMPILE]"
+            .byte <defcompile
+            .byte >defcompile
+            .byte <hcompile
+            .byte >hcompile
+defcompile: .byte $87
+            .text "COMPILE"
+            .byte <defsave
+            .byte >defsave
+            .byte <compile
+            .byte >compile
+defsave:    .byte 4
+            .text "SAVE"
+            .byte <defsaveready
+            .byte >defsaveready
+            .byte <save
+            .byte >save
+defsaveready: .byte 9
+            .text "SAVEREADY"
+            .byte <defrot
+            .byte >defrot
+            .byte <saveready
+            .byte >saveready
+defrot:     .byte 3
+            .text "ROT"
+            .byte <defleave
+            .byte >defleave
+            .byte <rot
+            .byte >rot
+defleave:   .byte 5
+            .text "LEAVE"
+            .byte <deftwee
+            .byte >deftwee
+            .byte <leave
+            .byte >leave
+deftwee:    .byte 1
+            .text "2"
+            .byte <defdrie
+            .byte >defdrie
+            .byte <twee
+            .byte >twee
+defdrie:    .byte 1
+            .text "3"
+            .byte <defdeel
+            .byte >defdeel
+            .byte <drie
+            .byte >drie
+defdeel:    .byte 1
+            .text "/"
+            .byte <defmod
+            .byte >defmod
+            .byte <deel
+            .byte >deel
+defmod:     .byte 3
+            .text "MOD"
+            .byte <defbranch0
+            .byte >defbranch0
+            .byte <mod
+            .byte >mod
+defbranch0: .byte 7
+            .text "0BRANCH"
+            .byte <defcall
+            .byte >defcall
+            .byte <branch0
+            .byte >branch0
+defcall:    .byte 4
+            .text "CALL"
+            .byte <defpad
+            .byte >defpad
+            .byte <call
+            .byte >call
+defpad:     .byte 3
+            .text "PAD"
+            .byte <deftweemaal
+            .byte >deftweemaal
+            .byte <padad
+            .byte >padad
+deftweemaal: .byte 2
+            .text "2*"
+            .byte <deftweedeel
+            .byte >deftweedeel
+            .byte <tweemaal
+            .byte >tweemaal
+deftweedeel: .byte 2
+            .text "2/"
+            .byte <defcmove
+            .byte >defcmove
+            .byte <tweedeel
+            .byte >tweedeel
+defcmove:   .byte 5
+            .text "CMOVE"
+            .byte <defdoes
+            .byte >defdoes
+            .byte <cmove
+            .byte >cmove
+defdoes:    .byte 5
+            .text "DOES>"
+            .byte <defdrop
+            .byte >defdrop
+            .byte <does
+            .byte >does
+defdrop:    .byte 4
+            .text "DROP"
+            .byte <defword
+            .byte >defword
+            .byte <drop
+            .byte >drop
+defword:    .byte 4
+            .text "WORD"
+            .byte <defhexdump
+            .byte >defhexdump
+            .byte <word
+            .byte >word
+defhexdump: .byte 7                // print a hexdump starting with the address
+            .text "HEXDUMP"        // of the top of the stack for 16 bytes
+            .byte 0
+            .byte 0
+            .byte <hexdump
+            .byte >hexdump
 romhwm:
